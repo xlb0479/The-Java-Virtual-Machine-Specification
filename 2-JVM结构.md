@@ -41,4 +41,5 @@ JVM支持的基本数据类型包括*数字类型*，`boolean`类型（§2.3.4�
 
 `boolean`类型就是对`true`和`false`进行编码，默认值是`false`。
 
-<pre></pre>
+<pre>*JVM规范*的第一版中并没有把boolean加入到JVM类型中。但是boolean在JVM中的支持确实有限。从第二版开始明确了这个事情，并把boolean纳入到类型中。</pre>
+
