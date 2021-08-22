@@ -85,3 +85,25 @@ IEEE754中不仅包括了由符号和量级组成的正负数，还包括正负�
 IEEE754允许binary32和binary64可以有多个不同的NaN值。但是JavaSE会将特定浮点数类型的所有NaN值归结到一个单独的特定值上，因此本书中引用的NaN值对应的是其中任意一种NaN值。
 
 <pre>在IEEE754中，对非NaN参数的浮点数操作可能会生成一个NaN的结果。IEEE754中定义了一组NaN位模式，但是没有强制哪一个NaN位模式用来表达NaN结果；这个事儿交给了硬件架构。程序员可以创建不同位模式的NaN来进行编码，比如可溯源的诊断信息。这些NaN值可以分别用`float`和`double`中对应的`Float.intBitsToFloat`和`Double.longBitsToDouble`方法来创建。反过来，要想看NaN的位模式，可以使用`float`和`double`中对应的`Float.floatToRawIntBits`和`Double.doubleToRawLongBits`方法。</pre>
+
+光拿正零和负零比较，它们是相等的，但依然有别的办法能把它们区分出来；比如`1.0`除以`0.0`得到的是正无穷，`1.0`除以`-0.0`得到的就是负无穷。
+
+NaN是*无序的*，如果对数字做相等判断，只要两个操作数中有一个是NaN，结果就是`false`。而且，只有当值为NaN的时候，判断自己跟自己是否相等，结果一定是`false`。如果是判断不相等，只要俩数中有一个是NaN，结果就是`true`。
+
+2.3.3 returnAddress类型
+
+`returnAddress`类型用于JVM的`jsr`、`ret`和`jsr_w`指令（§jsr, §ret, §jsr_w）。`returnAddress`类型的值是JVM指令操作码的指针。与基本数字类型不同，`returnAddress`类型并没有对应到Java语言中的类型，而且无法被运行中的程序所修改。
+
+### 2.3.4 boolean类型
+
+尽管JVM中定义了`boolean`类型，但支持有限。JVM中没有专用于操作`boolean`值的指令。实际上，Java语言中的表达式在操作`boolean`值的时候，编译后都变成了JVM中的`int`类型。
+
+但JVM明确支持`boolean`数组。其中`newarray`指令（§newarray）可以用来创建`boolean`数组。访问和修改`boolean`数组的时候要用到`byte`数组指令中的*baload*和*bastore*（§baload, §bastore）。
+
+<pre>在Oracle的JVM实现中，Java语言的`boolean`数组编码成了JVM的`byte`数组，每个`boolean`元素占8个比特。</pre>
+
+JVM在编码`boolean`数组的时候用`1`代表`true`用`0`代表`false`。Java语言中的`boolean`被编译器映射到了JVM的`int`类型，编译器必须要做相同的编码规则。
+
+## 2.4 引用类型
+
+一共有三种`refrerence`类型：类、数组、接口。它们的值都是在引用动态创建出来的类实例、数组或
