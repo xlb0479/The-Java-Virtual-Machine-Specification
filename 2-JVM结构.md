@@ -248,3 +248,35 @@ JVM在方法调用的时候使用局部变量来传参。在类方法调用时�
 对于对象的内部结构，JVM并不做强制要求。
 
 <pre>在一些Oracle的JVM中，对于类实例的而引用就是一个*句柄*的指针，而这个句柄本身又是一对儿指针：其中一个指向一张表，里面包含了对象的方法，以及一个指向该对象所属类型的Class对象的指针，另一个指向了为该对象数据分配的堆内存。</pre>
+
+## 2.8 浮点数运算
+
+JVM中包含了一部分IEEE 754标准中定义的浮点数运算（JLS §1.7）。
+
+<pre>从JavaSE15开始，JVM使用2019版的IEEE 754标准。在这之前，JVM用的是1985版的，当时binary32被称为单精度，binary64则是双精度。</pre>
+
+JVM中很多算术运算（§2.11.3）和类型转换（§2.11.4）指令都可以用于浮点数。这些指令一般都遵照IEEE 754的行为规范（表2.8-A），后面也给出了一些例外情况。
+
+**表 2.8-A IEEE 754参照**
+
+|指令|IEEE 754操作|
+|-|-|
+|dcmp<op> (§dcmp<op>), fcmp<op> (§fcmp<op>)|compareQuietLess, compareQuietLessEqual, compareQuietGreater, compareQuietGreaterEqual, compareQuietEqual, compareQuietNotEqual|
+|dadd (§dadd), fadd (§fadd)|addition|
+|dsub (§dsub), fsub (§fsub)|subtraction|
+|dmul (§dmul), fmul (§fmul)|multiplication|
+|ddiv (§ddiv), fdiv (§fdiv)|division|
+|dneg (§dneg), fneg (§fneg)|negate|
+|i2d (§i2d), i2f (§i2f), l2d (§l2d), l2f (§l2f)|convertFromInt|
+|d2i (§d2i), d2l (§d2l), f2i (§f2i), f2l (§f2l)|convertToIntegerTowardZero|
+|d2f (§d2f), f2d (§f2d)|convertFormat|
+
+JVM和IEEE 754中浮点数运算的关键不同之处在于：
+
+- 浮点数取余指令*drem*（§drem）和*frem*（§frem）跟IEEE 754中的不一样。我们的指令是基于向零舍入的隐式除法；人家的则是就近舍入的隐式除法。（后面会讲舍入策略。）
+- 浮点数的负数指令*dneg*（§dneg）和*fneg*（§fneg）跟IEEE 754的不一样。特别是，如果被转换的是一个NaN，则指令并不需要它的符号位。
+- JVM的浮点数指令不会抛异常，不会陷入（trap）以及IEEE 754中其他的异常情况的信号，比如无效操作、除以零、上溢、下溢和非精确值。
+- JVM不支持IEEE 754的信号浮点数比较，并且没有信号NaN值。
+- IEEE 754的舍入方向属性不适用于JVM的舍入策略。JVM中无法修改浮点数指令所使用的舍入策略。
+<pre>某些IEEE 754操作在JVM中没有对应的属性，这些操作都封到了<code>Math</code>和<code>StrictMath</code>类中，包括IEEE 754的平方根操作<code>sqrt</code>，融合乘加运算方法<code>fma</code>，以及IEEE 754的求余操作<code>IEEEremainder</code>方法。</pre>
+
