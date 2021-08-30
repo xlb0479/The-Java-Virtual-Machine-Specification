@@ -334,3 +334,13 @@ Java 1.0和1.1要求浮点数表达式要做*严格*运算。严格运算意味�
 
 <pre>由于<code>&lt;clinit&gt;</code></pre>在Java语言中不属于有效的标识符，所以在Java语言中无法直接使用。
 
+### 2.9.3 签名多态方法
+
+如果一个方法是*签名多态*的，则应满足以下条件：
+- 它声明在`java.lang.invoke.MethodHandle`或`java.lang.invoke.VarHandle`类中。
+- 只有一个类型为`Object[]`的形参。
+- 有`ACC_VARARGS`和`ACC_NATIVE`标志。
+
+为了对*方法句柄*的调用施加影响，或是对`java.lang.invoke.VarHandle`实例引用的变量访问施加影响，JVM在`invokevirtual`指令中对签名多态方法做了特殊处理。
+
+一个方法句柄是一个动态的，强类型的，可直接执行的引用，它可以引用一个方法、构造器、字段或是类似的低级别操作（§5.4.3.5），还可以对参数或返回值做变形处理。一个`java.lang.invoke.VarHandle`的实例也是一个动态的，强类型的引用，它可以引用一个或一组变量，包括`static`字段、非`static`字段、数组元素或是非堆数据结构的组成部分。详见JavaSE API的`java.lang.invoke`包。
