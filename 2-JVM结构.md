@@ -396,3 +396,45 @@ do {
 
 <pre>将JVM操作码先知道一个字节并且放弃在编译后的代码中做字节对齐，这体现了非常明显的对于紧凑感的偏爱，甚至在某些简单实现中还要损耗一些性能。一字节的操作码同样限制了指令集的大小。不做数据对齐意味着大于一字节的即时数据在很多机器上需要在运行时通过多字节构建。</pre>
 
+### 2.11.1 类型与JVM
+
+JVM指令集中的大部分指令都编码了它们各自操作的类型信息。比如*iload*指令，加载局部变量到操作数栈，要求变量必须得是`int`。*fload*指令则是对应`float`值。这两个指令的实现可能是一样的，但是操作码却不同。
+
+对于大部分带类型的指令，指令的类型都是将对应的助记字母放在操作码中：*i*就是`int`操作，*l*就是`long`，*s*是`short`，*b*是`byte`，*c*是`char`，*f*是`float`，*d*是`double`，*a*是`reference`。有些指令其类型特征很明显，就不用加助记字母了。比如*arraylength*肯定是操作数组的。其他的指令，比如*goto*，做的是无条件控制转移，不需要操作带类型的操作数。
+
+由于JVM操作码的单字节大小限制，如何将类型信息编码到操作码中，这对于指令集的设计提出了很高的要求。如果每个带类型的指令都要支持JVM的所有运行时数据类型，那一字节肯定不够用了。因此，JVM对某些操作的类型支持做了降级处理。也就是说指令集故意不做正交设计。部分指令可以根据需要在支持和不支持的类型之间进行转换。
+
+表2.11.1-A中总结了JVM指令集的类型支持情况。每个带类型的指令将操作码列中指令模板中的*T*替换成类型列的信息。如果指令模板对应的类型列为空，那就是该类型没有对应的指令。比如`int`有加载指令*iload*，但是`byte`就没有。
+
+我们注意到表2.11.1-A中的大部分指令都不怎么支持`byte`、`char`和`short`。也都不支持`boolean`类型。编译器对`byte`和`short`类型的字面量加载做编码时，用JVM指令对它们的值进行符号扩展，在编译时或运行时弄成`int`类型。`boolean`和`char`类型的字面量加载，则是通过指令编码在编译时或运行时做零扩展，也弄成`int`类型。同样，对于`boolean`、`byte`、`short`和`char`类型的数组，也是在编译时或运行时通过JVM指令编码做符号扩展或零扩展，弄成`int`类型的值。因此，对于真实类型为`boolean`、`byte`、`char`和`short`类型的值，都可以被`int`类型的指令正确的处理。
+
+|**操作码**|`byte`|`short`|`int`|`long`|`float`|`double`|`char`|`reference`|
+|-|-|-|-|-|-|-|-|-|
+|*Tipush*|*bipush*|*sipush*|
+|*Tconst*|*iconst*|*lconst*|*fconst*|*dconst*|*aconst*|
+|*Tload*|*iload*|*lload*|*fload*|*dload*|*aload*|
+|*Tstore*|*istore*|*lstore*|*fstore*|*dstore*|*astore*|
+|*Tinc*|*iinc*|
+|*Taload*|*baload*|*saload*|*iaload*|*laload*|*faload*|*daload*|*caload*|*aaload*|
+|*Tastore*|*bastore*|*sastore*|*iastore*|*lastore*|*fastore*|*dastore*|*castore*|*aastore*|
+|*Tadd*|*iadd*|*ladd*|*fadd*|*dadd*|
+|*Tsub*|*isub*|*lsub*|*fsub*|*dsub*|
+|*Tmul*|*imul*|*lmul*|*fmul*|*dmul*|
+|*Tdiv*|*idiv*|*ldiv*|*fdiv*|*ddiv*|
+|*Trem*|*irem*|*lrem*|*frem*|*drem*|
+|*Tneg*|*ineg*|*lneg*|*fneg*|*dneg*|
+|*Tshl*|*ishl*|*lshl*|
+|*Tshr*|*ishr*|*lshr*|
+|*Tushr*|*iushr*|*lushr*|
+|*Tand*|*iand*|*land*|
+|*Tor*|*ior*|*lor*|
+|*Txor*|*ixor*|*lxor*|
+|*i2T*|*i2b*|*i2s*|*i2l*|*i2f*|*i2d*|
+|*l2T*|*l2i*|*l2f*|*l2d*|
+|*f2T*|*f2i*|*f2l*|*f2d*|
+|*d2T*|*d2i*|*d2l*|*d2f*|
+|*Tcmp*|*lcmp*|
+|*Tcmpl*|*fcmpl*|*dcmpl*|
+|*Tcmpg*|*fcmpg*|*dcmpg*|
+|*if_TcmpOP*|*if_icmpOP*|*if_acmpOP*|
+|*Treturn*|*ireturn*|*lreturn*|*freturn*|*dreturn*|*areturn*|
