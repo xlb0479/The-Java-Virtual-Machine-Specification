@@ -541,3 +541,15 @@ JVM还直接支持了以下的减肥型转换：
 从`double`往`float`类型抽抽转换参照IEEE 754的规则。转换结果使用就近舍入原则（§2.8）。如果值太小，无法表达成一个`float`的话，则会转换成`float`类型的正零或负零；如果值太大，则会转换成正或负无穷。`double`类型的NaN转换成`float`后还是NaN。
 
 尽管会有上下溢、丢精度的问题，往小抽抽这种类型转换绝对不会导致JVM抛异常（不要跟IEEE 754的浮点数异常搞混了）。
+
+### 2.11.5 对象创建与操作
+
+尽管类实例和数组都属于对象，但JVM在创建和操作它们的时候使用了不同的指令集：
+- 创建一个新的类实例用：*new*。
+- 创建一个新的数组用：*newarray*、*anewarray*、*multianewarray*。
+- 访问类的属性（`static`属性，也叫类变量）以及类实例属性（非`static`属性，也叫实例属性）：*getstatic*、*putstatic*、*getfield*、*putfield*。
+- 将数组的组成部分加载到操作数栈：*baload*、*caload*、*saload*、*iaload*、*laload*、*faload*、*daload*、*aaload*。
+- 把操作数栈上的值保存到数组的组成部分中：*bastore*、*castore*、*sastore*、*iastore*、*lastore*、*fastore*、*dastore*、*aastore*。
+- 获取数组长度：*arraylength*。
+- 检查类实例或数组的属性：*instanceof*、*checkcast*。
+
