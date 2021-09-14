@@ -553,3 +553,6 @@ JVM还直接支持了以下的减肥型转换：
 - 获取数组长度：*arraylength*。
 - 检查类实例或数组的属性：*instanceof*、*checkcast*。
 
+### 2.11.6 操作数栈管理指令
+
+这些指令可以直接用于操作数栈：*pop*、*pop2*、*dup*、*dup2*、*dup_x1*、*dup2_x1*、*dup_x2*、*dup2_x2*、*swap*。
