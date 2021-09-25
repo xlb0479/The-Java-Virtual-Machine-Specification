@@ -559,3 +559,24 @@ JVM还直接支持了以下的减肥型转换：
 
 ### 2.11.7 控制转移指令
 
+控制转移指令可以有条件或无条件的让JVM继续执行，但后续指令并非控制转移指令的下一条指令。这些控制转移指令包括：
+- 有条件分支：*ifeq*，*ifne*，*iflt*，*ifle*，*ifge*，*ifnull*，*ifnonnull*，*if_icmpeq*，*if_icmpne*，*if_icmplt*，*if_icmple*，*if_icmpgt*，*if_icmpge*，*if_acmpeq*，*if_acmpne*。
+- 组合型有条件分支：*tableswitch*，*lookupswitch*。
+- 无条件分支：*goto*，*goto_w*，*jsr*，*jsr_w*，*ret*。
+
+JVM为`int`和`reference`类型的比较提供了不同的条件分支指令集。对于判断空引用也提供了不同的条件分支指令，这样就不需要给`null`（§2.4）声明一个具体值了。
+
+条件分支中对于`boolean`、`byte`、`char`和`short`类型的比较都使用了`int`比较指令（§2.11.1）。对于`long`、`float`、`double`类型的条件分支比较，先是通过一条指令比较这些数据，然后得到一个`int`结果（§2.11.3）。然后用`int`比较指令来测试该结果并影响最终的条件分支。由于经常要用`int`比较，JVM为`int`类型的条件分支指令提供了大量的实现。
+
+所有的`int`条件控制转移指令都使用带符号的比较方法。
+
+### 2.11.8 方法调用与返回指令
+
+方法调用包括以下五种指令：
+- *invokevirtual*调用一个对象的实例方法，分派到该对象的（虚）类型上。这是Java语言中的常规方法分派机制。
+- *invokeinterface*调用一个接口方法，搜索那些在运行时实现了该方法的对象，找到合适的方法。
+- *invokespecial*调用需要特殊处理的实例方法，比如实例初始化方法（§2.9.1），或当前class以及父类型的方法。
+- *invokestatic*调用类（`static`）方法。
+- *invokedynamic*调用的方法是绑定到该*invokedynamic*指令的调用点对象的目标。调用点对象由JVM绑定到特定的`invokedynamic`指令出现的地方，然后在首次执行该指令之前会运行一个引导方法。因此，每次*invokedynamic*指令的出现都有一个唯一的连接状态，这就不同于其他的方法调用指令。
+
+方法返回指令根据返回类型有所不同，分别是*ireturn*（用来返回`boolean`、`byte`、`char`、`short`或`int`值）、*lreturn*、*freturn*、*dreturn*和*areturn*。此外，*return*指令用于void类型的方法、实例初始化方法以及类或接口初始化方法的返回。
