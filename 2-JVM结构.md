@@ -580,3 +580,8 @@ JVM为`int`和`reference`类型的比较提供了不同的条件分支指令集�
 - *invokedynamic*调用的方法是绑定到该*invokedynamic*指令的调用点对象的目标。调用点对象由JVM绑定到特定的`invokedynamic`指令出现的地方，然后在首次执行该指令之前会运行一个引导方法。因此，每次*invokedynamic*指令的出现都有一个唯一的连接状态，这就不同于其他的方法调用指令。
 
 方法返回指令根据返回类型有所不同，分别是*ireturn*（用来返回`boolean`、`byte`、`char`、`short`或`int`值）、*lreturn*、*freturn*、*dreturn*和*areturn*。此外，*return*指令用于void类型的方法、实例初始化方法以及类或接口初始化方法的返回。
+
+### 2.11.9 抛出异常
+
+使用*athrow*指令可以通过编程的方式来抛出异常。当JVM指令发现异常条件时也会抛出异常。
+
