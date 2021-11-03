@@ -157,3 +157,36 @@ JavaSE平台可以定义*预览版*。如果一个JVM实现符合JavaSE*N*（*N*
  #### `interfaces[]`
 
  `interfaces`数组中的每个值必须是`constant_pool`表中的一个有效索引。每个`interfaces[i]`，`0 ≤ i < interfaces_count`，对应的`constant_pool`表中的记录必须是一个`CONSTANT_Class_info`结构体，用来表达该类或接口的一个直接父接口，顺序按照它们在该类型的源代码中声明的顺序排列。
+
+ #### `fields_count`
+
+ 这个值就是告诉你`fields`表中有多少个`field_info`结构体。`field_info`结构体代表了所有的属性，包括当前类或接口类型声明的类属性和实例属性。
+
+ #### `fields[]`
+
+ `fields`表中的每个值都得是一个`field_info`结构体（§4.5），完整的描述了当前类或接口中的一个属性。`fields`表中仅包含当前类或接口声明的属性。不包含父类或者父接口的。
+
+ #### `methods_count`
+
+ 这个值就是`methods`表中有多少个`method_info`结构体。
+
+ #### `methods[]`
+
+ 这个表里面的每个值必须是一个`method_info`结构体（§4.6），完整描述了当前类或接口中的一个方法。如果`method_info`结构体中的`access_flags`没有设置`ACC_NATIVE`或`ACC_ABSTRACT`，也同样提供实现该方法的JVM指令。（最后这半句没搞明白）
+
+ `method_info`结构体用于表达当前类或接口中声明的所有方法，包括实例方法、类方法、实例初始化方法（§2.9.1），以及任何的类或接口的初始化方法（§2.9.2）。不包括父类或者父接口的。
+
+ #### `attributes_count`
+
+ 这个值代表`attributes`表中有多少个属性（attribute）。
+
+ #### `attributes[]`
+
+     表中的每个值都得是一个`attribute_info`结构体（§4.7）。
+
+     其中包含的属性见表4.7-C。
+
+     预定义属性相关规则见§4.7。
+
+     非预定义属性相关规则见§4.7.1。
+
