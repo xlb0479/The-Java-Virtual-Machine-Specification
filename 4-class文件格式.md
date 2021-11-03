@@ -89,3 +89,51 @@ JavaSE平台可以定义*预览版*。如果一个JVM实现符合JavaSE*N*（*N*
 - 一个依赖于JavaSE*N*预览特性的`class`文件只有当JavaSE*N*的预览特性开启后才能被加载。
 - 一个依赖于其他JavaSE发行版预览特性的`class`文件绝对无法被加载。
 - 一个不依赖于任何JavaSE发行版预览特性的`class`文件可以被加载，不论JavaSE*N*是否开启了预览特性。
+
+#### `constant_pool_count`
+
+`constant_pool_count`的值等于`constant_pool`表中记录数量加一。在`constant_pool`表中的有效索引是大于零且小于`constant_pool_count`的，除了§4.4.5提到的特殊的`long`和`double`类型的常量。
+
+#### `constant_pool[]`
+
+`constant_pool`是一个结构体表（§4.4），用来表达各种不同的字符串常量、类和接口名、属性名，以及其他`ClassFile`结构及其子结构中引用的常量。每一条`constant_pool`表中的记录格式由该记录的第一个“标签”字节确定。
+
+`constant_pool`表中的所有是从1到`constant_pool_count`-1。
+
+#### `access_flags`
+
+`access_flags`的值是访问权限以及一些类或接口属性信息的掩码。每个标记的含义见表4.1-B。
+
+**表4.1-B. 类访问和属性修饰符**
+
+|**标记名**|**值**|**解释**|
+|-|-|-|
+|ACC_PUBLIC|0x0001|`public`声明；可以从包外访问。
+|ACC_FINAL|0x0010|`final`声明；不让有子类。
+|ACC_SUPER|0x0020|被*invokespecial*指令调用时对父类方法要特殊对待。
+|ACC_INTERFACE|0x0200|是个接口，不是类。
+|ACC_ABSTRACT|0x0400|`abstract`声明；不能被实例化。
+|ACC_SYNTHETIC|0x1000|合成声明；不直接存在于源代码中。
+|ACC_ANNOTATION|0x2000|声明注解接口。
+|ACC_ENUM|0x4000|`enum`类声明
+|ACC_MODULE|0x8000|我是模块，不是类或接口。
+
+ `ACC_MODULE`说明这个`class`文件是定义模块的，不是类或者接口。如果设置了`ACC_MODULE`标记，就会为`class`文件添加本节末尾提到的特殊规则。如果没有设置`ACC_MODULE`标记，则为`class`文件添加下面这段规则。
+
+ `ACC_INTERFACE`标记用于区分是否是接口。如果没有设置`ACC_INTERFACE`标记，说明该`class`文件定义的是类，而不是接口或模块。
+
+ 如果设置了`ACC_INTERFACE`标记，则不能设置`ACC_ABSTRACT`标记，也不能设置`ACC_FINAL`、`ACC_SUPER`、`ACC_ENUM`以及`ACC_MODULE`标记。
+
+ 如果没设置`ACC_INTERFACE`标记，表4.1-B中除了`ACC_ANNOTATION`和`ACC_MODULE`以外的所有标记都可以设置。但这种`class`文件不能同时设置`ACC_FINAL`和`ACC_ABSTRACT`（JLS §8.1.1.2）。
+
+ 如果类或接口中设置了`ACC_SUPER`，它用来指示`invokespecial`指令（§invokespecial）的具体语义。JVM指令集的编译器要负责设置`ACC_SUPER`标记。从JavaSE8开始，JVM会认为所有的`class`文件都设置的`ACC_SUPER`标记，不管`class`文件中该标记的真实值是什么，也不管`class`文件的版本是什么。
+
+ <pre><code>ACC_SUPER</code>标记是为了跟早期的Java语言编译器做向后兼容。在JDK1.0.2之前，编译器生成的`access_flags`中并没有`ACC_SUPER`的含义，即便设置了也会被Oracle的JVM实现所忽略。</pre>
+
+ `ACC_SYNTHETIC`标记表示这个类或接口是编译器生成的，源代码中看不到。
+
+ 注解接口（JLS §9.6）必须要设置`ACC_ANNOTATION`。如果设置了，那么必须要同时设置`ACC_INTERFACE`。
+
+ `ACC_ENUM`标记指明该类或其父类被声明为一个枚举类（JLS §8.9）。
+
+ 表4.1-B中没有说明的比特位留给以后需要的时候再用。在生成的`class`文件中它们应该都设置成零，并且JVM实现也应该忽略这些比特位。
