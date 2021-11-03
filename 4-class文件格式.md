@@ -137,3 +137,23 @@ JavaSE平台可以定义*预览版*。如果一个JVM实现符合JavaSE*N*（*N*
  `ACC_ENUM`标记指明该类或其父类被声明为一个枚举类（JLS §8.9）。
 
  表4.1-B中没有说明的比特位留给以后需要的时候再用。在生成的`class`文件中它们应该都设置成零，并且JVM实现也应该忽略这些比特位。
+
+ #### `this_class`
+
+ 它的值必须是`constant_pool`表中的有效索引。该索引对应的记录必须是一个`COSNTANT_Class_info`结构体（§4.4.1），用于表达该`class`文件所定义的类或接口。
+
+ #### `super_class`
+
+ 对于类来说，`super_class`的值要么是零要么是`constant_pool`表中的有效索引。如果非零，`constant_pool`表中该索引对应的记录必须是一个`CONSTANT_Class_info`结构体，用于表达该`class`文件定义的类的直接父类。不管是它的直接父类还是更高层的父类，它们的`ClassFile`中的`access_flags`中都不能设置`ACC_FINAL`标记。
+
+ 如果该值是零，那么该`class`文件就必须表达的是`Object`类，只有它没有直接父类。
+
+ 对于接口来说，该标记的值必须总是`constant_pool`表中的有效索引。`constant_pool`表中该索引对应的记录必须是一个`CONSTANT_Class_info`结构体，用来表达`Object`类。
+
+ #### `interfaces_count`
+
+ 它的值用来表示该类或接口的直接父接口的数量。
+
+ #### `interfaces[]`
+
+ `interfaces`数组中的每个值必须是`constant_pool`表中的一个有效索引。每个`interfaces[i]`，`0 ≤ i < interfaces_count`，对应的`constant_pool`表中的记录必须是一个`CONSTANT_Class_info`结构体，用来表达该类或接口的一个直接父接口，顺序按照它们在该类型的源代码中声明的顺序排列。
