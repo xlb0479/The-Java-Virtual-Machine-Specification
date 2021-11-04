@@ -190,3 +190,9 @@ ClassFile {
 
 &emsp;&emsp;非预定义属性相关规则见§4.7.1。
 
+如果`access_flags`中设置了`ACC_MODULE`标记，那么就不会设置其他标记了，而且会针对该`ClassFile`结构体中的其他部分应用以下规则：
+
+- `major_version`、`minor_version`：≥53.0（即至少得是JavaSE9）
+- `this_class`：`module_info`
+- `super_class`、`interfaces_count`、`fields_count`、`methods_count`：零
+- `attributes`：必须要有个一个`Module`属性。除了`Module`、`ModulePackge`、`ModuleMainClass`、`InnerClasses`、`SourceFile`、`SourceDebugExtension`、`RuntimeVisibleAnnotations`、`RuntimeInvisibleAnnotations`以外，不能有其他预定义属性（§4.7）。
