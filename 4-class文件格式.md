@@ -244,19 +244,19 @@ ClassFile {
 
 一个*属性描述符*表达了一个类、实例或本地变量的类型。
 
-&emsp;&emsp;*FieldDescriptor:*
-&emsp;&emsp;&emsp;&emsp;*FieldType*
-&emsp;&emsp;*FieldType:*
-&emsp;&emsp;&emsp;&emsp;*BaseType*
-&emsp;&emsp;&emsp;&emsp;*ObjectType*
-&emsp;&emsp;&emsp;&emsp;*ArrayType*
-&emsp;&emsp;*BaseType:*
-&emsp;&emsp;&emsp;&emsp;*(one of)*
-&emsp;&emsp;&emsp;&emsp;`B C D F I J S Z`
-&emsp;&emsp;*ObjectType:*
-&emsp;&emsp;&emsp;&emsp;`L` *ClassName ;*
-&emsp;&emsp;*ArrayType:*
-&emsp;&emsp;&emsp;&emsp;`[` *ComponentType*
-&emsp;&emsp;*ComponentType:*
-&emsp;&emsp;&emsp;&emsp;*FieldType*
+&emsp;&emsp;*FieldDescriptor:*<br/>
+&emsp;&emsp;&emsp;&emsp;*FieldType*<br/>
+&emsp;&emsp;*FieldType:*<br/>
+&emsp;&emsp;&emsp;&emsp;*BaseType*<br/>
+&emsp;&emsp;&emsp;&emsp;*ObjectType*<br/>
+&emsp;&emsp;&emsp;&emsp;*ArrayType*<br/>
+&emsp;&emsp;*BaseType:*<br/>
+&emsp;&emsp;&emsp;&emsp;*(one of)*<br/>
+&emsp;&emsp;&emsp;&emsp;`B C D F I J S Z`<br/>
+&emsp;&emsp;*ObjectType:*<br/>
+&emsp;&emsp;&emsp;&emsp;`L` *ClassName ;*<br/>
+&emsp;&emsp;*ArrayType:*<br/>
+&emsp;&emsp;&emsp;&emsp;`[` *ComponentType*<br/>
+&emsp;&emsp;*ComponentType:*<br/>
+&emsp;&emsp;&emsp;&emsp;*FieldType*<br/>
 
