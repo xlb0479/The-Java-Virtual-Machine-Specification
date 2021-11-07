@@ -254,9 +254,38 @@ ClassFile {
 &emsp;&emsp;&emsp;&emsp;*(one of)*<br/>
 &emsp;&emsp;&emsp;&emsp;`B C D F I J S Z`<br/>
 &emsp;&emsp;*ObjectType:*<br/>
-&emsp;&emsp;&emsp;&emsp;`L` *ClassName ;*<br/>
+&emsp;&emsp;&emsp;&emsp;`L` *ClassName* `;`<br/>
 &emsp;&emsp;*ArrayType:*<br/>
 &emsp;&emsp;&emsp;&emsp;`[` *ComponentType*<br/>
 &emsp;&emsp;*ComponentType:*<br/>
 &emsp;&emsp;&emsp;&emsp;*FieldType*<br/>
+
+*BaseType*中的字符，以及*ObjectType*中的`L`和`;`，还有*ArrayType*中的`[`，这些都是ASCII字符。
+
+*ClassName*代表一个二进制类或接口名编码后的内部格式（§4.2.1）。
+
+属性描述符中的类型解释见表4.3-A。
+
+如果属性描述符要表达一个数组类型，那它的维度不能大于255。
+
+**表4.3-A 属性描述符解释**
+
+|***FieldType***|**类型**|**解释**
+|-|-|-
+|`B`|`byte`|有符号byte
+|`C`|`char`|基本多文种平面中的Unicode字符代码点，以UTF-16编码
+|`D`|`double`|双精度浮点数
+|`F`|`float`|单精度浮点数
+|`I`|`int`|整型
+|`J`|`long`|长整型
+|`L` *ClassName* `;`|`reference`|*ClassName*类的一个实例
+|`S`|`short`|有符号short
+|`Z`|`boolean`|`true`或`false`
+|`[`|`reference`|一维数组
+
+&emsp;&emsp;`int`类型实例变量的属性描述符就是一个`I`。
+
+&emsp;&emsp;`Object`类型实例变量的属性描述符是`Ljava/lang/Object;`。注意这里使用的是内部格式。
+
+&emsp;&emsp;`double[][][]`类型的多维数组实例变量的属性描述符是`[[[D`。
 
