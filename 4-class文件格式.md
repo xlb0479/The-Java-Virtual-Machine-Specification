@@ -289,3 +289,28 @@ ClassFile {
 
 &emsp;&emsp;`double[][][]`类型的多维数组实例变量的属性描述符是`[[[D`。
 
+### 4.3.3 方法描述符
+
+一个*方法描述符*包含零或多个*参数描述符*，表达方法携带的参数类型，还有一个*返回描述符*，表达方法返回指（如果有）的类型。
+
+&emsp;&emsp;*MethodDescriptor:*<br/>
+&emsp;&emsp;&emsp;&emsp;( *{ParameterDescriptor}* ) *ReturnDescriptor*<br/>
+&emsp;&emsp;*ParameterDescriptor:*<br/>
+&emsp;&emsp;&emsp;&emsp;*FieldType*<br/>
+&emsp;&emsp;*ReturnDescriptor:*<br/>
+&emsp;&emsp;&emsp;&emsp;*FieldType*<br/>
+&emsp;&emsp;&emsp;&emsp;*VoidDescriptor*<br/>
+&emsp;&emsp;*VoidDescriptor:*<br/>
+&emsp;&emsp;&emsp;&emsp;`V`<br/>
+
+字符`V`就代表方法没有返回指（返回结果是`void`）。
+
+&emsp;&emsp;一个方法：<br/>
+&emsp;&emsp;&emsp;&emsp;`Object m(int i, double d, Thread t) {...}`<br/>
+的方法描述符：<br/>
+&emsp;&emsp;&emsp;&emsp;`(IDLjava/lang/Thread;)Ljava/lang/Object;`<br/>
+&emsp;&emsp;注意这里用了`Thread`和`Object`的内部格式。<br/>
+
+方法描述符的方法参数不能超过255个，其中还包含实例方法或接口方法调用时的`this`参数。这里的个数计算是把每个单独参数的贡献值加起来，其中`long`和`double`都是占用了两个单位，其他类型的参数则只占用一个单位。
+
+方法描述符对于类方法和实例方法都是一样的。尽管实例方法会传一个`this`，引用方法调用时的对象，再跟上其他参数，但这个事儿在方法描述符中看不出来。`this`引用是由JVM指令调用实例方法时隐式传递的（§2.6.1, §4.11）。
