@@ -352,3 +352,45 @@ cp_info {
 |CONSTANT_Module|19|§4.4.11
 |CONSTANT_Package|20|§4.4.12
 
+如果一个`class`文件的版本号是*v*，那么`constant_pool`表中的每条记录的标记要么是*v*版本新定义的，要么是以前定义的（§4.1）（总感觉是个废话）。就是说，每条记录所代表的常量类型必须被`class`文件所允许。表4.4-B中列出了每种标记首次定义对应的`class`文件格式版本。以及对应的JavaSE平台版本。
+
+**表4.4-B 常量池标记（按标记值排序）**
+
+|**常量类型**|**标记**|`class`**文件格式**|**Java SE**
+|-|-|-|-
+|CONSTANT_Utf8|1|45.3|1.0.2
+|CONSTANT_Integer|3|45.3|1.0.2
+|CONSTANT_Float|4|45.3|1.0.2
+|CONSTANT_Long|5|45.3|1.0.2
+|CONSTANT_Double|6|45.3|1.0.2
+|CONSTANT_Class|7|45.3|1.0.2
+|CONSTANT_String|8|45.3|1.0.2
+|CONSTANT_Fieldref|9|45.3|1.0.2
+|CONSTANT_Methodref|10|45.3|1.0.2
+|CONSTANT_InterfaceMethodref|11|45.3|1.0.2
+|CONSTANT_NameAndType|12|45.3|1.0.2
+|CONSTANT_MethodHandle|15|51.0|7
+|CONSTANT_MethodType|16|51.0|7
+|CONSTANT_Dynamic|17|55.0|11
+|CONSTANT_InvokeDynamic|18|51.0|7
+|CONSTANT_Module|19|53.0|9
+|CONSTANT_Package|20|53.0|9
+
+`constant_pool`表中的一些记录是*可加载*的，因为它们所表达的实体可以在运行时被压栈做运算。在版本*v*的`class`文件中，如果`contant_pool`表中的一条记录是可加载的，它要么是在版本*v*的时候被认为是可加载的，要么是之前的版本中就被认为是可加载的了（又是一句感觉上的废话）。表4.4-C列出了每个标记首次被认为是可加载时对应的`class`文件格式版本。以及对应的JavaSE平台版本。
+
+&emsp;&emsp;除了`CONSTANT_Class`，标记被认为是可加载的时候都是它首次定义的时候。
+
+**表4.4-C 可加载常量池标记**
+
+|**常量类型**|**标记**|`class`**文件格式**|**Java SE**
+|-|-|-|-
+|CONSTANT_Integer|3|45.3|1.0.2
+|CONSTANT_Float|4|45.3|1.0.2
+|CONSTANT_Long|5|45.3|1.0.2
+|CONSTANT_Double|6|45.3|1.0.2
+|CONSTANT_Class|7|49.0|5.0
+|CONSTANT_String|8|45.3|1.0.2
+|CONSTANT_MethodHandle|15|51.0|7
+|CONSTANT_MethodType|16|51.0|7
+|CONSTANT_Dynamic|17|55.0|11
+
