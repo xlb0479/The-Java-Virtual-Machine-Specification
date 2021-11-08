@@ -394,3 +394,30 @@ cp_info {
 |CONSTANT_MethodType|16|51.0|7
 |CONSTANT_Dynamic|17|55.0|11
 
+### 4.4.1 CONSTANT_Class_info结构
+
+`CONSTANT_Class_info`结构体用来表达一个类或接口：
+
+```
+CONSTANT_Class_info {
+    u1 tag;
+    u2 name_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_Class`（7）。
+
+`name_index`
+
+&emsp;&emsp;必须是`constant_pool`表中的有效索引。对应的记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的二进制类或接口名，以内部格式编码（§4.2.1）。
+
+因为数组也是对象嘛，操作码*anewarray*和*multianewarray*——可不是*new*——可以通过`constant_pool`表的`CONSTANT_Class_info`结构体来引用数组的“类”。对于这些数组类，类的名字就是数组类型的描述符（§4.3.2）。
+
+&emsp;&emsp;比如二维数组类型`int[][]`的类名是`[[I`，`Thread[]`的类名是`[Ljava/lang/Thread;`。
+
+数组类型的描述符维度不能大于255。
+
