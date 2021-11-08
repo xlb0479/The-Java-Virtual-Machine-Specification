@@ -314,3 +314,41 @@ ClassFile {
 方法描述符的方法参数不能超过255个，其中还包含实例方法或接口方法调用时的`this`参数。这里的个数计算是把每个单独参数的贡献值加起来，其中`long`和`double`都是占用了两个单位，其他类型的参数则只占用一个单位。
 
 方法描述符对于类方法和实例方法都是一样的。尽管实例方法会传一个`this`，引用方法调用时的对象，再跟上其他参数，但这个事儿在方法描述符中看不出来。`this`引用是由JVM指令调用实例方法时隐式传递的（§2.6.1, §4.11）。
+
+## 4.4 常量池
+
+JVM不会依赖运行时的类、接口、类实例或数组的层次结构。而是要引用`constant_pool`表中的符号信息。
+
+`constant_pool`表中的所有记录都具有一般形式：
+
+```
+cp_info {
+    u1 tag;
+    u1 info[];
+}
+```
+
+`constant_pool`表中的每条记录的开头必须要有一个1字节标记，表示该记录所表达的常量类型。一共有17种常量，对应的标记也都列在了表4.4-A中，按照它们在本节中讲述的顺序排列。每个标记字节后面必须要跟至少两个字节，用来提供指定常量的信息。其他信息的格式依赖于标记字节，根据`tag`的不同，`info`数组的内容也随之变化。
+
+**表4.4-A 常量池标记（按章节号排列）**
+
+|**常量类型**|**标记**|**章节**
+|-|-|-
+|CONSTANT_Class|7|§4.4.1
+|CONSTANT_Fieldref|9|§4.4.2
+|CONSTANT_Methodref|10|§4.4.2
+|CONSTANT_InterfaceMethodref|11|§4.4.2
+|CONSTANT_String|8|§4.4.3
+|CONSTANT_Integer|3|§4.4.4
+|CONSTANT_Float|4|§4.4.4
+|CONSTANT_Long|5|§4.4.5
+|CONSTANT_Double|6|§4.4.5
+|CONSTANT_NameAndType|12|§4.4.6
+|CONSTANT_Utf8|1|§4.4.7
+|CONSTANT_MethodHandle|15|§4.4.8
+|CONSTANT_MethodType|16|§4.4.9
+|CONSTANT_Dynamic|17|§4.4.10
+|CONSTANT_InvokeDynamic|18|§4.4.10
+|CONSTANT_Module|19|§4.4.11
+|CONSTANT_Package|20|§4.4.12
+
