@@ -494,3 +494,33 @@ CONSTANT_String_info {
 
 &emsp;&emsp;必须是`constant_pool`表的有效索引。表中对应的记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个Unicode代码点序列，`String`对象用它来初始化。
 
+### 4.4.4 CONSTANT_Integer_info和CONSTANT_Float_info结构
+
+它们用力表达4字节的数字（`int`和`float`）常量：
+
+```
+CONSTANT_Integer_info {
+    u1 tag;
+    u4 bytes;
+}
+CONSTANT_Float_info {
+    u1 tag;
+    u4 bytes;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;在`CONSTANT_Integer_info`结构体中它的值是`CONSTANT_Integer`（3）。
+
+&emsp;&emsp;在`CONSTANT_Float_info`结构体中它的值是`CONSTANT_Float`（4）。
+
+`bytes`
+
+&emsp;&emsp;在`CONSTANT_Integer_info`结构体中它的值用来表达`int`常量的值。该值的字节按照大端序进行存储（高位字节在前）。
+
+&emsp;&emsp;在`CONSTANT_Float_info`结构体中它的值用来表达IEEE 754定义的binary32浮点格式（§2.3.2）的`float`常量。该值的字节按照大端序进行存储（高位字节在前）。
+
+&emsp;&emsp;`CONSTANT_Float_info`结构体所表达的值有以下规则。该值的字节首先要转换成一个`int`常量*比特*。然后：
