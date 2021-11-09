@@ -421,3 +421,55 @@ CONSTANT_Class_info {
 
 数组类型的描述符维度不能大于255。
 
+### 4.4.2 CONSTANT_Fieldref_info，CONSTANT_Methodref_info，CONSTANT_InterfaceMethodref_info结构
+
+属性、方法、接口方法，它们都用类似的结构体来表达：
+
+```
+CONSTANT_Fieldref_info {
+    u1 tag;
+    u2 class_index;
+    u2 name_and_type_index;
+}
+
+CONSTANT_Methodref_info {
+    u1 tag;
+    u2 class_index;
+    u2 name_and_type_index;
+}
+
+CONSTANT_InterfaceMethodref_info {
+    u1 tag;
+    u2 class_index;
+    u2 name_and_type_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;在`CONSTANT_Fieldref_info`中它的值是`CONSTANT_Fieldref`（9）。
+
+&emsp;&emsp;在`CONSTANT_Methodref_info`中它的值是`CONSTANT_Methodref`（10）。
+
+&emsp;&emsp;在`CONSTANT_InterfaceMethodref_info`中它是`CONSTANT_InterfaceMethodref`（11）。
+
+`class_index`
+
+&emsp;&emsp;它的值必须是`constant_pool`表的有效索引。表中对应的记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），表达一个类或接口，它的成员包含了该`class_index`所属的属性或方法。
+
+&emsp;&emsp;在`CONSTANT_Fieldref_info`中，它对应的值可以是一个类或接口类型。
+
+&emsp;&emsp;在`CONSTANT_Methodref_info`中，它对应的值必须是一个类，不能是接口类型。
+
+&emsp;&emsp;在`CONSTANT_InterfaceMethodref_info`中，它对应的值必须是一个接口类型，不能是类。
+
+`name_and_type_index`
+
+&emsp;&emsp;它的值必须是`contant_pool`表的有效索引。对应的记录必须是一个`CONSTANT_NameAndType_info`结构体（§4.4.6）。该记录代表了属性或方法的名字以及描述符。
+
+&emsp;&emsp;在`CONSTANT_Fieldref_info`中，它指明的描述符必须是一个属性描述符（§4.3.2）。其他场景下必须是一个方法描述符（§4.3.3）。
+
+&emsp;&emsp;如果`CONSTANT_Methodref_info`结构体中的方法名以`<`（`\u003c`）开头，那它就必须是特殊的`<init>`，代表实例初始化方法（§2.9.1）。这种方法的返回类型必须是`void`。
+
