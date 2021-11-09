@@ -473,3 +473,24 @@ CONSTANT_InterfaceMethodref_info {
 
 &emsp;&emsp;如果`CONSTANT_Methodref_info`结构体中的方法名以`<`（`\u003c`）开头，那它就必须是特殊的`<init>`，代表实例初始化方法（§2.9.1）。这种方法的返回类型必须是`void`。
 
+### 4.4.3 CONSTANT_String_info结构
+
+该结构用来表达`String`类型的常量对象：
+
+```
+CONSTANT_String_info {
+    u1 tag;
+    u2 string_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_String`（8）。
+
+`string_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。表中对应的记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个Unicode代码点序列，`String`对象用它来初始化。
+
