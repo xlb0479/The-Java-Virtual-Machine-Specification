@@ -538,5 +538,68 @@ CONSTANT_Float_info {
     (bits & 0x7fffff) | 0x800000;
 ```
 
-那么，该`float`值等于表达式<code>s · m · 2<sup>e-150</sup></code>的计算结果。
+&emsp;&emsp;那么，该`float`值等于表达式<code>s · m · 2<sup>e-150</sup></code>的计算结果。
 
+### 4.4.5 CONSTANT_Long_info和CONSTANT_Double_info结构
+
+`CONSTANT_Long_info`和`CONSTANT_Double_info`代表8字节数字（`long`和`double`）常量：
+
+```
+CONSTANT_Long_info {
+    u1 tag;
+    u4 high_bytes;
+    u4 low_bytes;
+}
+CONSTANT_Double_info {
+    u1 tag;
+    u4 high_bytes;
+    u4 low_bytes;
+}
+```
+
+所有的8字节常量在`class`文件的`constant_pool`表中都要占两条记录。如果一个`CONSTANT_Long_info`或`CONSTANT_Double_info`结构体在`constant_pool`表中的索引是*n*，那么表中下一个可用的索引则是*n*+2。索引*n*+1一定是有效的但是不可使用。
+
+<pre>现在回头想想，让8字节常量占俩位置是一个糟糕的决定。</pre>
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;在`CONSTANT_Long_info`中它的值是`CONSTANT_Long`（5）。
+
+&emsp;&emsp;在`CONSTANT_Double_info`中它的值是`CONSTANT_Double`（6）。
+
+`high_bytes`、`low_bytes`
+
+&emsp;&emsp;在`CONSTANT_Long_info`中，它俩一起决定了`long`常量的值
+
+```
+((long) high_bytes << 32) + low_bytes
+```
+
+&emsp;&emsp;`high_bytes`和`low_bytes`的每个字节都是按大端序（高位在前）排列的。
+
+&emsp;&emsp;在`CONSTANT_Double_info`中，他俩一起决定了一个IEEE 754定义的binary64浮点格式（§2.3.2）的`double`值。每个字节也是按大端序（高位在前）来的。
+
+&emsp;&emsp;`CONSTANT_Double_info`表达的值按以下规则生成。首先要把它俩转成`long`常量*比特位*，就等于
+
+```
+((long) high_bytes << 32) + low_bytes
+```
+
+&emsp;&emsp;然后：
+
+- 如果*比特位*是`0x7ff0000000000000L`，那么这个`double`值是正无穷。
+- 如果*比特位*是`0xfff0000000000000L`，那么这个`double`值是负无穷。
+- 如果*比特位*的范围是从`0x7ff0000000000001L`到`0x7fffffffffffffffL`，或者是`0xfff0000000000001L`到`0xffffffffffffffffL`，那么这个`double`就是个NaN。
+- 以上都不是的话，假设`s`、`e`、`m`是三个可以从*比特位*计算得到的值：
+
+```
+int s = ((bits >> 63) == 0) ? 1 : -1;
+int e = (int)((bits >> 52) & 0x7ffL);
+long m = (e == 0) ?
+            (bits & 0xfffffffffffffL) << 1 :
+            (bits & 0xfffffffffffffL) | 0x10000000000000L;
+```
+
+&emsp;&emsp;那么，该`double`值等于表达式<code>s · m · 2<sup>e-1075</sup></code>的计算结果。
