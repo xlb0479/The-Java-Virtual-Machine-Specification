@@ -523,4 +523,20 @@ CONSTANT_Float_info {
 
 &emsp;&emsp;在`CONSTANT_Float_info`结构体中它的值用来表达IEEE 754定义的binary32浮点格式（§2.3.2）的`float`常量。该值的字节按照大端序进行存储（高位字节在前）。
 
-&emsp;&emsp;`CONSTANT_Float_info`结构体所表达的值有以下规则。该值的字节首先要转换成一个`int`常量*比特*。然后：
+&emsp;&emsp;`CONSTANT_Float_info`结构体所表达的值有以下规则。该值的字节首先要转换成一个`int`常量*比特位*。然后：
+
+- 如果*比特位*是`0x7f800000`，这个`float`是正无穷。
+- 如果*比特位*是`0xff800000`，这个`float`是负无穷。
+- 如果*比特位*的范围是`0x7f800001`到`0x7fffffff`或是`0xff800001`到`0xffffffff`，这个`float`是个NaN。
+- 以上都不是的话，假设`s`、`e`、`m`是三个可以从*比特位*计算得到的值：
+
+```
+    int s = ((bits >> 31) == 0) ? 1 : -1;
+    int e = ((bits >> 23) & 0xff);
+    int m = (e == 0) ?
+    (bits & 0x7fffff) << 1 :
+    (bits & 0x7fffff) | 0x800000;
+```
+
+那么，该`float`值等于表达式<code>s · m · 2<sup>e-150</sup></code>的计算结果。
+
