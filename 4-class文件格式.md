@@ -671,12 +671,12 @@ CONSTANT_Utf8_info {
 
 - null代码点（`\u0000`）以及`\u0080`到`\u07FF`范围内的代码点用一对字节`x`和`y`表达：
 
-`x`：
+&emsp;&emsp;`x`：
 
 |*1*|*1*|*0*|*bits 10-6*
 |-|-|-|-
 
-`y`：
+&emsp;&emsp;`y`：
 
 |*1*|*0*|*bits 5-0*
 |-|-|-
@@ -689,17 +689,17 @@ CONSTANT_Utf8_info {
 
 - `\u0800`到`\uFFFF`范围内的代码点用3个字节`x`、`y`、`z`表达：
 
-`x`：
+&emsp;&emsp;`x`：
 
 |*1*|*1*|*1*|*0*|*bits 15-12*
 |-|-|-|-|-
 
-`y`：
+&emsp;&emsp;`y`：
 
 |*1*|*0*|*bits 11-6*
 |-|-|-
 
-`z`：
+&emsp;&emsp;`z`：
 
 |*1*|*0*|*bits 5-0*
 |-|-|-
@@ -716,19 +716,30 @@ CONSTANT_Utf8_info {
 
 |*1*|*1*|*1*|*0*|*1*|*1*|*0*|*1*
 |-|-|-|-|-|-|-|-
-`v`：
-`w`：
-`x`：
-`y`：
-`z`：
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.3/showdown.js"></script>
-<textarea id="src">
-- foo
+&emsp;&emsp;`v`：
 
-    | foo | bar | baz |
-    |-----|-----|-----|
-    | bla | bli | blu |
+|*1*|*0*|*1*|*0*|*（bits 20-16）-1*
+|-|-|-|-|-
 
-- baz
-</textarea><br>
+&emsp;&emsp;`w`：
+
+|*1*|*0*|*bits 15-10*
+|-|-|-
+
+&emsp;&emsp;`x`：
+
+|*1*|*1*|*1*|*0*|*1*|*1*|*0*|*1*
+|-|-|-|-|-|-|-|-
+
+&emsp;&emsp;`y`：
+
+|*1*|*0*|*1*|*0*|*bits 9-6*
+|-|-|-|-|-
+
+&emsp;&emsp;`z`：
+
+|*1*|*0*|*bits 5-0*
+|-|-|-
+
+&emsp;&emsp;
