@@ -780,6 +780,7 @@ CONSTANT_MethodHandle_info {
 `reference_index`
 
 &emsp;&emsp;必须是`constant_pool`表的有效索引。对应的记录必须：
+
 &emsp;&emsp;
 - 如果`reference_kind`值为1（`REF_getField`）、2（`REF_getStatic`）、3（`REF_putField`）、4（`REF_putStatic`），那么对应的记录必须是一个`CONSTANT_Fieldref_info`结构体（），代表一个属性，该方法句柄就是给这个属性建的。
 - 如果值为5（`REF_invokeVirtual`）或8（`REF_newInvokeSpecial`）
