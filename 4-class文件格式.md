@@ -603,3 +603,30 @@ long m = (e == 0) ?
 ```
 
 &emsp;&emsp;那么，该`double`值等于表达式<code>s · m · 2<sup>e-1075</sup></code>的计算结果。
+
+### 4.4.6 CONSTANT_NameAndType_info结构
+
+这玩意用来表达一个属性或者方法，但不包含它所属的类或接口类型：
+
+```
+CONSTANT_NameAndType_info {
+    u1 tag;
+    u2 name_index;
+    u2 descriptor_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_NameAndType`（12）。
+
+`name_index`
+
+&emsp;&emsp;它的值必须得是`constant_pool`表的有效索引。对应的记录必须得是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的属性或方法的未限定名（§4.2.2），或者是特殊的方法名`<init>`（§2.9.1）。
+
+`descriptor_index`
+
+&emsp;&emsp;它的值也得是`constant_pool`表的有效索引。对应的记录同样必须得是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的属性描述符或方法描述符（§4.3.2，§4.3.3）。
+
