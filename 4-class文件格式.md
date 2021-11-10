@@ -714,10 +714,21 @@ CONSTANT_Utf8_info {
 
 &emsp;&emsp;`u`：
 
-&emsp;&emsp;|*1*|*1*|*1*|*0*|*1*|*1*|*0*|*1*
+|*1*|*1*|*1*|*0*|*1*|*1*|*0*|*1*
 |-|-|-|-|-|-|-|-
 `v`：
 `w`：
 `x`：
 `y`：
 `z`：
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.8.3/showdown.js"></script>
+<textarea id="src">
+- foo
+
+    | foo | bar | baz |
+    |-----|-----|-----|
+    | bla | bli | blu |
+
+- baz
+</textarea><br>
