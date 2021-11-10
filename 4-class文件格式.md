@@ -755,3 +755,31 @@ CONSTANT_Utf8_info {
 
 <pre>关于标准UTF-8的详细介绍，请移步Unicode标准之Unicode编码格式，第13版，第3.9节。</pre>
 
+### 4.4.8 CONSTANT_MethodHandle_info结构
+
+该结构体用来表达一个方法句柄：
+
+```
+CONSTANT_MethodHandle_info {
+    u1 tag;
+    u1 reference_kind;
+    u2 reference_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_MethodHandle`（15）。
+
+`reference_kind`
+
+&emsp;&emsp;值必须在1到9之间。代表该方法句柄的*种类*，从而确定它的字节码行为（§5.4.3.5）。
+
+`reference_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应的记录必须：
+
+    - 如果`reference_kind`值为1（`REF_getField`）、2（`REF_getStatic`）、3（`REF_putField`）、4（`REF_putStatic`），那么对应的记录必须是一个`CONSTANT_Fieldref_info`结构体（），代表一个属性，该方法句柄就是给这个属性建的。
+    - 如果值为5（`REF_invokeVirtual`）或8（`REF_newInvokeSpecial`）
