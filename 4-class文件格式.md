@@ -810,3 +810,45 @@ CONSTANT_MethodType_info {
 `descriptor_index`
 
 &emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个方法描述符（§4.3.3）。
+
+### 4.4.10 CONSTANT_Dynamic_info和CONSTANT_InvokeDynamic_info结构
+
+`constant_pool`表中大部分的结构体都是直接用来表达实体的，把名字、描述符、值组合起来，它们都是表中的静态记录。相反，`CONSTANT_Dynamic_info`和`CONSTANT_InvokeDynamic_info`这两个结构体间接表达了实体，它们指向了用来动态计算实体的代码。这种代码，称为*引导方法*，在JVM解析这些结构体派生出的符号引用时，会调用这种代码（§5.1, §5.4.3.6）。每个结构体指明了一个引导方法、一个辅助的名字和类型，用来描述需要被计算的实体。细节如下：
+
+- `CONSTANT_Dynamic_info`结构体用来表达一个*动态计算常量*，它是一个任意值，在*ldc*（§ldc）等其他指令执行的时候，调用引导方法产生了这个值。结构体指定的辅助类型用来约束动态计算出的常量的类型。
+- `CONSTANT_InvokeDynamic_info`结构体用来表达一个*动态计算调用点*，它是`java.lang.invoke.CallSite`的一个实例，在*invokedynamic*指令（§invokedynamic）执行的时候调用引导方法所产生。结构体指定的辅助类型用来约束动态计算调用点的方法类型。
+
+```
+CONSTANT_Dynamic_info {
+    u1 tag;
+    u2 bootstrap_method_attr_index;
+    u2 name_and_type_index;
+}
+CONSTANT_InvokeDynamic_info {
+    u1 tag;
+    u2 bootstrap_method_attr_index;
+    u2 name_and_type_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;在`CONSTANT_Dynamic_info`结构体中它的值是`CONSTANT_Dynamic`（17）。
+
+&emsp;&emsp;在`CONSTANT_InvokeDynamic_info`结构体中它的值是`CONSTANT_InvokeDynamic`（18）。
+
+`bootstrap_method_attr_index`
+
+&emsp;&emsp;必须是`class`文件引导方法表`bootstrap_methods`数组的有效索引（§4.7.23）。
+
+&emsp;&emsp;`CONSTANT_Dynamic_info`结构体很特殊，因为在语法上它可以通过引导方法表引用它自己。我们并不强制在类加载时探测出这种循环（这种检查潜在的代价很大），我们允许一开始存在这种循环，但是在解析时要强制报错（§5.4.3.6）。
+
+`name_and_type_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_NameAndType_info`结构体（§4.4.6）。该记录给出一个名字和一个描述符。
+
+&emsp;&emsp;在`CONSTANT_Dynamic_info`中，给出的描述符必须是一个属性描述符（§4.3.2）。
+
+&emsp;&emsp;在`CONSTANT_InvokeDynamic_info`中，给出的描述符必须是一个方法描述符（§4.3.3）。
