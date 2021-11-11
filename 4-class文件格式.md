@@ -781,6 +781,11 @@ CONSTANT_MethodHandle_info {
 
 &emsp;&emsp;必须是`constant_pool`表的有效索引。对应的记录必须：
 
-&emsp;&emsp;
 - 如果`reference_kind`值为1（`REF_getField`）、2（`REF_getStatic`）、3（`REF_putField`）、4（`REF_putStatic`），那么对应的记录必须是一个`CONSTANT_Fieldref_info`结构体（），代表一个属性，该方法句柄就是给这个属性建的。
-- 如果值为5（`REF_invokeVirtual`）或8（`REF_newInvokeSpecial`）
+- 如果值为5（`REF_invokeVirtual`）或8（`REF_newInvokeSpecial`），对应记录必须是一个`CONSTANT_Methodref_info`结构体（§4.4.2）,表达一个类的方法或构造器（§2.9.1），该方法句柄就是给它们建的。
+- 如果值为6（`REF_invokeStatic`）或7（`REF_invokeSpecial`），且`class`文件版本号小于52.0，那么对应的记录必须是一个`CONSTANT_Methodref_info`结构体，代表一个类的方法，该方法句柄为它而建；如果版本号大于等于52.0，对应的记录必须要么是一个`CONSTANT_Methodref_info`结构体，要么是一个`CONSTANT_InterfaceMethodref_info`结构体（§4.4.2），代表一个类或接口的方法，该方法句柄为它而建。
+- 如果值等于9（`REF_invokeInterface`），对应记录必须是一个`CONSTANT_InterfaceMethodref_info`结构体，代表一个接口的方法，该方法句柄为它而建。
+
+&emsp;&emsp;如果`reference_kind`值等于5（`REF_invokeVirtual`）、6（`REF_invokeStatic`）、7（`REF_invokeSpecial`）、9（`REF_invokeInterface`），对应`CONSTANT_Methodref_info`或`CONSTANT_InterfaceMethodref_info`结构体所表达的方法的名字绝不能是`<init>`或`<clinit>`。
+
+&emsp;&emsp;如果值等于8（`REF_newInvokeSpecial`），对应`CONSTANT_Methodref_info`结构体表达的方法的名字必须是`<init>`。
