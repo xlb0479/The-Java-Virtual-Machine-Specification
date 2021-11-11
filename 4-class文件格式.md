@@ -852,3 +852,27 @@ CONSTANT_InvokeDynamic_info {
 &emsp;&emsp;在`CONSTANT_Dynamic_info`中，给出的描述符必须是一个属性描述符（§4.3.2）。
 
 &emsp;&emsp;在`CONSTANT_InvokeDynamic_info`中，给出的描述符必须是一个方法描述符（§4.3.3）。
+
+### 4.4.11 CONSTANT_Module_info结构
+
+这玩意用来表达一个模块：
+
+```
+CONSTANT_Module_info {
+    u1 tag;
+    u2 name_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_Module`（19）。
+
+`name_index`
+
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应的记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的模块名（§4.2.3）。
+
+只有`class`文件声明了一个模块时，该结构体才能出现在它的常量池中，也就是说`ClassFile`结构体的`access_flags`中必须要设置`ACC_MODULE`标记。否则，`CONSTANT_Module_info`结构体的出现都是非法的。
+
