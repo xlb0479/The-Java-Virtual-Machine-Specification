@@ -789,3 +789,24 @@ CONSTANT_MethodHandle_info {
 &emsp;&emsp;如果`reference_kind`值等于5（`REF_invokeVirtual`）、6（`REF_invokeStatic`）、7（`REF_invokeSpecial`）、9（`REF_invokeInterface`），对应`CONSTANT_Methodref_info`或`CONSTANT_InterfaceMethodref_info`结构体所表达的方法的名字绝不能是`<init>`或`<clinit>`。
 
 &emsp;&emsp;如果值等于8（`REF_newInvokeSpecial`），对应`CONSTANT_Methodref_info`结构体表达的方法的名字必须是`<init>`。
+
+### 4.4.9 CONSTANT_MethodType_info结构
+
+该结构体用来表达一个方法类型：
+
+```
+CONSTANT_MethodType_info {
+    u1 tag;
+    u2 descriptor_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_MethodType`（16）。
+
+`descriptor_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个方法描述符（§4.3.3）。
