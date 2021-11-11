@@ -876,3 +876,25 @@ CONSTANT_Module_info {
 
 只有`class`文件声明了一个模块时，该结构体才能出现在它的常量池中，也就是说`ClassFile`结构体的`access_flags`中必须要设置`ACC_MODULE`标记。否则，`CONSTANT_Module_info`结构体的出现都是非法的。
 
+### 4.4.12 CONSTANT_Package_info结构
+
+该结构体用来表达一个被导出的包或是一个模块打开的包：
+
+```
+CONSTANT_Package_info {
+    u1 tag;
+    u2 name_index;
+}
+```
+
+解释如下：
+
+`tag`
+
+&emsp;&emsp;值为`CONSTANT_Package`（20）。
+
+`name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的包名，并以内部形式编码（§4.2.3）。
+
+只有`class`文件声明了一个模块时，该结构体才能出现在它的常量池中，也就是说`ClassFile`结构体的`access_flags`中必须要设置`ACC_MODULE`标记。否则，`CONSTANT_Package_info`结构体的出现都是非法的。
