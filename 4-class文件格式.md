@@ -898,3 +898,75 @@ CONSTANT_Package_info {
 &emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的包名，并以内部形式编码（§4.2.3）。
 
 只有`class`文件声明了一个模块时，该结构体才能出现在它的常量池中，也就是说`ClassFile`结构体的`access_flags`中必须要设置`ACC_MODULE`标记。否则，`CONSTANT_Package_info`结构体的出现都是非法的。
+
+## 4.5 字段
+
+每个字段都要用一个`field_info`结构体来描述。
+
+同一个`class`文件中字段名和描述符唯一（§4.3.2）。
+
+该结构体格式如下：
+
+```
+field_info {
+    u2 access_flags;
+    u2 name_index;
+    u2 descriptor_index;
+    u2 attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
+
+解释如下：
+
+`access_flags`
+
+&emsp;&emsp;它的值是该字段访问权限及属性的标记掩码。每种可能的标记情况见表4.5-A。
+
+&emsp;&emsp;**表4.5-A 字段访问及属性标记**
+
+|**标记名**|**值**|**解释**
+|-|-|-
+|ACC_PUBLIC|0x0001|`public`声明；可以从包外访问。
+|ACC_PRIVATE|0x0002|`private`声明；只能在定义的类或相同嵌套层次内访问（§5.4.4）。
+|ACC_PROTECTED|0x0004|`protected`声明；可以被子类访问。
+|ACC_STATIC|0x0008|`static`声明。
+|ACC_FINAL|0x0010|`final`声明；在对象构造后不能直接赋值（JLS §17.5）。
+|ACC_VOLATILE|0x0040|`volatile`声明；不能被缓存。
+|ACC_TRANSIENT|0x0080|`transient`声明；无法被持久化对象管理器读写。
+|ACC_SYNTHETIC|0x1000|合成声明；源码里看不出来。
+|ACC_ENUM|0x4000|声明这是一个`enum`类的元素。
+
+&emsp;&emsp;类中的字段可以设置表4.5-A中的任意标记。但是对于`ACC_PUBLIC`、`ACC_PRIVATE`和`ACC_PROTECTED`标记（JLS §8.3.1），一个类中的一个字段最多只能设置其中的一个，对于`ACC_FINAL`和`ACC_VOLATILE`也不能同时出现（JLS §8.3.1.4）。
+
+&emsp;&emsp;接口中的字段必须要设置`ACC_PUBLIC`、`ACC_STATIC`和`ACC_FINAL`标记；可能还会设置`ACC_SYNTHETIC`，但其他的不能再加了（JLS §9.3）。
+
+&emsp;&emsp;`ACC_SYNTHETIC`标记表示这个字段是编译器生成的，不在源码里。
+
+&emsp;&emsp;`ACC_ENUM`标记表示这个字段保存的是一个枚举类的元素（JLS §8.9）。
+
+&emsp;&emsp;表4.5-A中没有给出的比特位留给以后用。生成`class`文件时它们都得设置成零，并且JVM实现也要忽略这些比特位。
+
+`name_index`
+
+&emsp;&emsp;比如是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达该字段有效的未限定名（§4.2.2）。
+
+`descriptor_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达一个有效的字段描述符。
+
+`attribute_count`
+
+&emsp;&emsp;给出该字段其他属性的数量。
+
+`attributes[]`
+
+&emsp;&emsp;表中每个值都是一个`attribute_info`结构体（§4.7）。
+
+&emsp;&emsp;一个字段可以有任意多个可选属性。
+
+&emsp;&emsp;本书定义的这种属性见表4.7-C。
+
+&emsp;&emsp;这里定义的属性要遵循一定的规则，见§4.7。
+
+&emsp;&emsp;非预定义属性也要遵循一定的规则，见§4.7.1。
