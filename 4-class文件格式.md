@@ -998,6 +998,7 @@ method_info {
 &emsp;&emsp;**表4.6-A 方法访问和属性标记**
 
 |**标记名**|**值**|**解释**
+|-|-|-
 |ACC_PUBLIC|0x0001|`public`声明；可以从包外访问。
 |ACC_PRIVATE|0x0002|`private`声明；只能在定义的类或相同嵌套层次内访问（§5.4.4）。
 |ACC_PROTECTED|0x0004|`protected`声明；可以被子类访问。
