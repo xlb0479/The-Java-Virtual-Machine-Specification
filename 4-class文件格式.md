@@ -903,7 +903,7 @@ CONSTANT_Package_info {
 
 每个字段都要用一个`field_info`结构体来描述。
 
-同一个`class`文件中字段名和描述符唯一（§4.3.2）。
+同一个`class`文件中字段名和描述符（§4.3.2）唯一。
 
 该结构体格式如下：
 
@@ -970,3 +970,43 @@ field_info {
 &emsp;&emsp;这里定义的属性要遵循一定的规则，见§4.7。
 
 &emsp;&emsp;非预定义属性也要遵循一定的规则，见§4.7.1。
+
+## 4.6 方法
+
+每个方法，包括实例初始化方法（§2.9.1）以及类或接口的初始化方法（§2.9.2），都要用`method_info`结构体来描述。
+
+同一个`class`文件中方法的名字和描述符（§4.3.3）唯一。
+
+该结构体格式如下：
+
+```
+method_info {
+    u2 access_flags;
+    u2 name_index;
+    u2 descriptor_index;
+    u2 attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
+
+解释如下：
+
+`access_flags`
+
+&emsp;&emsp;它的值是该方法访问权限和属性的掩码。每种标记对应的解释见表4.6-A。
+
+&emsp;&emsp;**表4.6-A 方法访问和属性标记**
+
+|**标记名**|**值**|**解释**
+|ACC_PUBLIC|0x0001|`public`声明；可以从包外访问。
+|ACC_PRIVATE|0x0002|`private`声明；只能在定义的类或相同嵌套层次内访问（§5.4.4）。
+|ACC_PROTECTED|0x0004|`protected`声明；可以被子类访问。
+|ACC_STATIC|0x0008|`static`声明。
+|ACC_FINAL|0x0010|`final`声明；不能被重写（§5.4.5）。
+|ACC_SYNCHRONIZED|0x0020|`synchronized`声明；调用时被监视器包着。
+|ACC_BRIDGE|0x0040|桥方法，由编译器生成。
+|ACC_VARARGS|0x0080|声明数量可变参数。
+|ACC_NATIVE|0x0100|`native`声明；不是用Java语言实现的方法。
+|ACC_ABSTRACT|0x0400|`abstract`声明；不提供实现。
+|ACC_STRICT|0x0800|如果`class`文件大版本号是[46,60]范围内则用来声明`strictfp`。
+|ACC_SYNTHETIC|0x1000|合成声明；源码中看不到。
