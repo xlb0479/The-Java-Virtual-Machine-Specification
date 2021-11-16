@@ -1040,3 +1040,25 @@ method_info {
 
 `descriptor_index`
 
+&emsp;&emsp;呵呵呵呵，必须是`constant_pool`的有效索引。对应的值必须是一个`CONSTANT_Utf8_info`结构体，代表一个有效的方法描述符（§4.3.3）。而且：
+
+- 如果是在类里面而不是接口中，并且这个方法名为`<init>`，那么描述符必须是一个`void`方法。
+- 如果方法名为`<clinit>`，描述符必须是一个`void`方法，并且，如果`class`文件版本号大于等于51.0，该方法不能带参数。
+
+&emsp;&emsp;未来可能会要求如果`access_flags`中设置了`ACC_VARARGS`，方法描述符的最后一个参数描述符得是一个数组类型。
+
+`attribute_count`
+
+&emsp;&emsp;代表该方法额外属性的数量。
+
+`attributes[]`
+
+&emsp;&emsp;其中的每个元素必须是一个`attribute_info`结构体（§4.7）。
+
+&emsp;&emsp;方法可以有任意多个可选属性。
+
+&emsp;&emsp;本书中定义的可以出现在此处的属性见表4.7-C。
+
+&emsp;&emsp;相关的规则见§4.7。
+
+&emsp;&emsp;非预定义属性的相关规则见§4.7.1。
