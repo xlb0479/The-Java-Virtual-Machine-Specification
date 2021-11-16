@@ -1011,3 +1011,32 @@ method_info {
 |ACC_ABSTRACT|0x0400|`abstract`声明；不提供实现。
 |ACC_STRICT|0x0800|如果`class`文件大版本号是[46,60]范围内则用来声明`strictfp`。
 |ACC_SYNTHETIC|0x1000|合成声明；源码中看不到。
+
+&emsp;&emsp;`0x0800`只有在`class`文件大版本为[46,60]这个区间内的时候才会被解释成`ACC_STRICT`。此时，`ACC_STRICT`能够跟其它标记一同设置取决于以下规则。（从JavaSE 1.2到16中，`ACC_STRICT`标记会约束方法的浮点数指令（§2.8））。如果`class`文件大版本小于46或大于60，`0x0800`并不会解释成`ACC_STRICT`标记，而是一个未设置的状态；在这种`class`文件中“设置`ACC_STRICT`标记”并无任何意义。
+
+&emsp;&emsp;类中的方法可以任意选择表4.6-A中的标记进行设置。但是`ACC_PUBLIC`、`ACC_PRIVATE`、`ACC_PROTECTED`最多只能设置其中一个（JLS §8.4.3）。
+
+&emsp;&emsp;接口中的方法除了不能用`ACC_PROTECTED`、`ACC_FINAL`、`ACC_SYNCHRONIZED`、`ACC_NATIVE`以外其他的也都可以任选（JLS §9.4）。如果`class`文件版本号小于52.0，那么接口方法必须要设置`ACC_PUBLIC`和`ACC_ABSTRACT`标记；如果大于等于52.0，每个接口方法只能设置`ACC_PUBLIC`或`ACC_PRIVATE`其中一个。
+
+&emsp;&emsp;如果一个类或接口方法设置了`ACC_ABSTRACT`，那就不能同时设置`ACC_PRIVATE`、`ACC_STATIC`、`ACC_FINAL`、`ACC_SYNCHRONIZED`、`ACC_NATIVE`，以及（`class`文件大版本在[46,60]之间时）`ACC_STRICT`也不行。
+
+&emsp;&emsp;实例初始化方法（§2.9.1）最多只能设置`ACC_PUBLIC`、`ACC_PRIVATE`和`ACC_PROTECTED`其中的一个，而且还要同时设置`ACC_VARARGS`和`ACC_SYNTHETIC`标记，而且还要（`class`文件大版本号在[46,60]时）设置`ACC_STRICT`，而且表4.6-A中其他的任何标记都不能设置。
+
+&emsp;&emsp;如果`class`文件版本大于等于51.0，方法名为`<clinit>`的方法必须要设置`ACC_STATIC`标记。
+
+&emsp;&emsp;类或接口的初始化方法（§2.9.2）是由JVM隐式调用的。如果没有设置`ACC_STATIC`以及（`class`文件大版本号为[46,60]时）`ACC_STRICT`标记，`access_flags`项会被直接忽略，而且方法不受之前讲的那些标记组合规则的限制。
+
+&emsp;&emsp;`ACC_BRIDGE`标记用来表示一个桥方法，它是Java语言编译器生成的。
+
+&emsp;&emsp;`ACC_VARARGS`表示该方法在源码级可以接受可变数量的参数。这种方法编译时必须将`ACC_VARARGS`标记设置成1。所有其他的方法编译时`ACC_VARARGS`必须是0。
+
+&emsp;&emsp;`ACC_SYNTHETIC`标记表示该方法是编译器生成的，在源码里看不到，除非它是§4.7.8列出的方法之一。
+
+&emsp;&emsp;表4.6-A中没有说明的`access_flags`的其他的比特位都留以后用。（其中包括`class`文件大版本为[46,60]时的0x0800。）生成的`class`文件中这些位置都应该归零，并且被JVM实现所忽略。
+
+`name_index`
+
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须时要给`CONSTANT_Utf8_info`结构体（§4.4.7），用来表示方法的一个有效的非限定名（§4.2.2），或者（方法是类方法而非接口方法）是特殊的`<init>`或`<clinit>`方法名。
+
+`descriptor_index`
+
