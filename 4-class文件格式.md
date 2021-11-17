@@ -1209,8 +1209,8 @@ attribute_info {
 |EnclosingMethod|ClassFile|49.0
 |SourceDebugExtension|ClassFile|49.0
 |BootstrapMethods|ClassFile|51.0
-|Module,|ModulePackages,|ModuleMainClass|ClassFile|53.0
-|NestHost,|NestMembers|ClassFile|55.0
+|Module,ModulePackages,ModuleMainClass|ClassFile|53.0
+|NestHost,NestMembers|ClassFile|55.0
 |Record|ClassFile|60.0
 |PermittedSubclasses|ClassFile|61.0
 |ConstantValue|field_info|45.3
