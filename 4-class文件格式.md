@@ -1062,3 +1062,171 @@ method_info {
 &emsp;&emsp;相关的规则见§4.7。
 
 &emsp;&emsp;非预定义属性的相关规则见§4.7.1。
+
+## 4.7 属性
+
+在`class`文件结构中，*属性*被用于`ClassFile`、`field_info`、`method_info`、`Code_attribute`、`record_component_info`结构体中（§4.1，§4.5，§4.6，§4.7.3，§4.7.30）。
+
+所有的属性都具备以下一般形式：
+
+```
+attribute_info {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u1 info[attribute_length];
+}
+```
+
+对于所有的属性来说，`attribute_name_index`必须是一个有效的、无符号的16位的常量池索引。`constant_pool`中对应的记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表属性的名字。`attribute_length`的值代表后续其他信息的字节数。该字节数不包括起始的六个字节，其中包含了`attribute_name_index`以及`attribute_length`。
+
+本书中介绍了30个预定义的属性。为了方便查询，给出三种排列：
+
+- 表4.7-A按属性所在章节号排序。每个属性跟着它首次定义、首次出现时的`class`文件版本号。以及该版本对应的JavaSE平台版本（§4.1）。
+- 表4.7-B按属性首次定义时的`class`文件格式版本号排序。
+- 表4.7-C按属性在`class`文件中出现的顺序排列。
+
+在本书介绍的上下文中，也就是这些属性所在的`attributes`表中，这些预定义属性的名字都是被保留的名字。
+
+`attributes`表中预定义属性出现的条件都明确的写在了介绍对应属性的小节中。如果没有说明对应的条件，那么该属性在`attributes`表中可以出现任意多次。
+
+根据用途不同，预定义属性分为三组：
+
+- 1. 这七种属性对于JVM正确解释`class`文件至关重要：
+    - `ConstantValue`
+    - `Code`
+    - `StackMapTable`
+    - `BootstrapMethods`
+    - `NestHost`
+    - `NestMembers`
+    - `PermittedSubclasses`
+
+&emsp;&emsp;如果`class`文件版本号为*v*，如果一个JVM实现支持该版本的`class`文件格式，那么这些属性必须能够被JVM识别并正确的读取，这些属性要么是*v*版本定义的要么是以前就有的，而且都出现在了它们该出现的位置上。
+
+- 2. 这十种属性对于JVM正确解释`class`并不那么重要，但对于JavaSE平台类库正确解释`class`文件很重要，而且对于其他工具也很有用（此时对应的小节中会将属性描述成“可选的”）：
+    - `Exceptions`
+    - `InnerClasses`
+    - `EnclosingMethod`
+    - `Synthetic`
+    - `Signature`
+    - `Record`
+    - `SourceFile`
+    - `LineNumberTable`
+    - `LocalVariableTable`
+    - `LocalVariableTypeTable`
+
+&emsp;&emsp;如果`class`文件版本号为*v*，如果一个JVM实现支持该版本的`class`文件格式，那么这些属性必须能够被JVM识别并正确的读取，这些属性要么是*v*版本定义的要么是以前就有的，而且都出现在了它们该出现的位置上。咯咯咯，我直接复制上面的了。
+
+- 3. 这十三种属性对于JVM正确解释`class`同样不那么重要，但是包含了`class`文件的元数据，它们要么是由JavaSE平台的类库暴露出来，要么是被工具加以利用（此时对应的小节中会将属性描述成“可选的”）：
+    - `SourceDebugExtension`
+    - `Deprecated`
+    - `RuntimeVisibleAnnotations`
+    - `RuntimeInvisibleAnnotations`
+    - `RuntimeVisibleParameterAnnotations`
+    - `RuntimeInvisibleParameterAnnotations`
+    - `RuntimeVisibleTypeAnnotations`
+    - `RuntimeInvisibleTypeAnnotations`
+    - `AnnotationDefault`
+    - `MethodParameters`
+    - `Module`
+    - `ModulePackages`
+    - `ModuleMainClass`
+
+&emsp;&emsp;JVM实现中可以选择使用这些属性所包含的信息，也可以简单的忽略这些属性。
+
+**表4.7-A 预定义的`class`文件属性（按章节号）**
+|**属性**|**章节**|**`class`文件**|**JavaSE**
+|-|-|-|-
+|ConstantValue|§4.7.2|45.3|1.0.2
+|Code|§4.7.3|45.3|1.0.2
+|StackMapTable|§4.7.4|50.0|6
+|Exceptions|§4.7.5|45.3|1.0.2
+|InnerClasses|§4.7.6|45.3|1.1
+|EnclosingMethod|§4.7.7|49.0|5.0
+|Synthetic|§4.7.8|45.3|1.1
+|Signature|§4.7.9|49.0|5.0
+|SourceFile|§4.7.10|45.3|1.0.2
+|SourceDebugExtension|§4.7.11|49.0|5.0
+|LineNumberTable|§4.7.12|45.3|1.0.2
+|LocalVariableTable|§4.7.13|45.3|1.0.2
+|LocalVariableTypeTable|§4.7.14|49.0|5.0
+|Deprecated|§4.7.15|45.3|1.1
+|RuntimeVisibleAnnotations|§4.7.16|49.0|5.0
+|RuntimeInvisibleAnnotations|§4.7.17|49.0|5.0
+|RuntimeVisibleParameterAnnotations|§4.7.18|49.0|5.0
+|RuntimeInvisibleParameterAnnotations|§4.7.19|49.0|5.0
+|RuntimeVisibleTypeAnnotations|§4.7.20|52.0|8
+|RuntimeInvisibleTypeAnnotations|§4.7.21|52.0|8
+|AnnotationDefault|§4.7.22|49.0|5.0
+|BootstrapMethods|§4.7.23|51.0|7
+|MethodParameters|§4.7.24|52.0|8
+|Module|§4.7.25|53.0|9
+|ModulePackages|§4.7.26|53.0|9
+|ModuleMainClass|§4.7.27|53.0|9
+|NestHost|§4.7.28|55.0|11
+|NestMembers|§4.7.29|55.0|11
+|Record|§4.7.30|60.0|16
+|PermittedSubclasses|§4.7.31|61.0|17
+
+**表4.7-B 预定义的`class`文件属性（按`class`文件格式）**
+|**属性**|**`class`文件**|**JavaSE**|**章节**
+|-|-|-|-
+|ConstantValue|45.3|1.0.2|§4.7.2
+|Code|45.3|1.0.2|§4.7.3
+|Exceptions|45.3|1.0.2|§4.7.5
+|SourceFile|45.3|1.0.2|§4.7.10
+|LineNumberTable|45.3|1.0.2|§4.7.12
+|LocalVariableTable|45.3|1.0.2|§4.7.13
+|InnerClasses|45.3|1.1|§4.7.6
+|Synthetic|45.3|1.1|§4.7.8
+|Deprecated|45.3|1.1|§4.7.15
+|EnclosingMethod|49.0|5.0|§4.7.7
+|Signature|49.0|5.0|§4.7.9
+|SourceDebugExtension|49.0|5.0|§4.7.11
+|LocalVariableTypeTable|49.0|5.0|§4.7.14
+|RuntimeVisibleAnnotations|49.0|5.0|§4.7.16
+|RuntimeInvisibleAnnotations|49.0|5.0|§4.7.17
+|RuntimeVisibleParameterAnnotations|49.0|5.0|§4.7.18
+|RuntimeInvisibleParameterAnnotations|49.0|5.0|§4.7.19
+|AnnotationDefault|49.0|5.0|§4.7.22
+|StackMapTable|50.0|6|§4.7.4
+|BootstrapMethods|51.0|7|§4.7.23
+|RuntimeVisibleTypeAnnotations|52.0|8|§4.7.20
+|RuntimeInvisibleTypeAnnotations|52.0|8|§4.7.21
+|MethodParameters|52.0|8|§4.7.24
+|Module|53.0|9|§4.7.25
+|ModulePackages|53.0|9|§4.7.26
+|ModuleMainClass|53.0|9|§4.7.27
+|NestHost|55.0|11|§4.7.28
+|NestMembers|55.0|11|§4.7.29
+|Record|60.0|16|§4.7.30
+|PermittedSubclasses|61.0|17|§4.7.31
+
+**表4.7-C 预定义的`class`文件属性（按位置）**
+|**属性**|**位置**|**`class`文件**
+|-|-|-
+|SourceFile|ClassFile|45.3
+|InnerClasses|ClassFile|45.3
+|EnclosingMethod|ClassFile|49.0
+|SourceDebugExtension|ClassFile|49.0
+|BootstrapMethods|ClassFile|51.0
+|Module,|ModulePackages,|ModuleMainClass|ClassFile|53.0
+|NestHost,|NestMembers|ClassFile|55.0
+|Record|ClassFile|60.0
+|PermittedSubclasses|ClassFile|61.0
+|ConstantValue|field_info|45.3
+|Code|method_info|45.3
+|Exceptions|method_info|45.3
+|RuntimeVisibleParameterAnnotations,
+|RuntimeInvisibleParameterAnnotations
+|method_info|49.0
+|AnnotationDefault|method_info|49.0
+|MethodParameters|method_info|52.0
+|Synthetic|ClassFile,field_info,method_info|45.3
+|Deprecated|ClassFile,field_info,method_info|45.3
+|Signature|ClassFile,field_info,method_info,record_component_info|49.0
+|RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations|ClassFile,field_info,method_info,record_component_info|49.0
+|LineNumberTable|Code|45.3
+|LocalVariableTable|Code|45.3
+|LocalVariableTypeTable|Code|49.0
+|StackMapTable|Code|50.0
+|RuntimeVisibleTypeAnnotations,RuntimeInvisibleTypeAnnotations|ClassFile,field_info,method_info,Code,record_component_info|52.0
