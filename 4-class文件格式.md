@@ -1228,3 +1228,16 @@ attribute_info {
 |LocalVariableTypeTable|Code|49.0
 |StackMapTable|Code|50.0
 |RuntimeVisibleTypeAnnotations,RuntimeInvisibleTypeAnnotations|ClassFile,field_info,method_info,Code,record_component_info|52.0
+
+### 4.7.1 定义和命名新的属性
+
+编译器可以定义并生成包含新属性的`class`文件，这些属性包括`class`文件结构体中的属性、`field_info`结构体中的属性、`method_info`结构体中的属性以及`Code`属性（§4.7.3）。JVM实现可以识别并使用`attributes`表中新出现的属性。但是如果属性并非本书定义的属性之一，那么它就不能影响到`class`文件的语义。JVM实现对于它们不认识的属性可以直接忽略。
+
+比如可以定义一个支持特定调试工具的新属性。因为JVM实现的时候可以忽略它们不认识的属性，即便是专门为特定JVM设计的`class`文件，也可以被其他JVM实现所使用，即便这些实现并不能利用到`class`文件中包含的调试信息。
+
+如果遇到了新的属性，JVM实现不能抛出异常或拒绝使用该`class`文件。当然，如果`class`文件没有提供足够的属性，对应的工具可能无法正确执行。
+
+两个不同属性之间应该是有所区分的，但也会碰巧使用了相同的名字并且长度也一样，此时在实现中就会出现冲突，只能识别其中一个属性。如果不是本书中定义的属性，起名应当参考*Java语言规范，JavaSE 第17版*（JLS §6.1）中的包名规范。
+
+本规范后续的版本也可能会定义出新的属性。
+
