@@ -1216,9 +1216,7 @@ attribute_info {
 |ConstantValue|field_info|45.3
 |Code|method_info|45.3
 |Exceptions|method_info|45.3
-|RuntimeVisibleParameterAnnotations,
-|RuntimeInvisibleParameterAnnotations
-|method_info|49.0
+|RuntimeVisibleParameterAnnotations,RuntimeInvisibleParameterAnnotations|method_info|49.0
 |AnnotationDefault|method_info|49.0
 |MethodParameters|method_info|52.0
 |Synthetic|ClassFile,field_info,method_info|45.3
