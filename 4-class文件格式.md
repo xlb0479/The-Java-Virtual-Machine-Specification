@@ -1241,3 +1241,45 @@ attribute_info {
 
 本规范后续的版本也可能会定义出新的属性。
 
+### 4.7.2 ConstantValue属性
+
+该属性是`field_info`结构体（§4.5）的`attributes`表中的一个固定长度的属性。该属性代表了一个常量表达式（JLS §15.28）的值，用法如下：
+
+- 如果`field_info`结构体的`access_flags`中设置了`ACC_STATIC`标记，那么该`field_info`结构体所表达的字段就会被赋值为它的`ConstantValue`属性所表达的值，此过程发生在声明该字段的类或接口进行初始化的时候（§5.5）。此过程发生在该类或接口的初始化方法被调用之前（§2.9.2）。
+- 否则，JVM必须要忽略掉这个属性。
+
+一个`field_info`结构体的`attributes`表中最多只能有一个`ConstantValue`属性。
+
+该属性格式如下：
+
+```
+ConstantValue_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 constantvalue_index;
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;该值必须为`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达的字符串值为“`ConstantValue`”
+
+`attribute_length`
+
+&emsp;&emsp;它的值必须是二。
+
+`constantvalue_index`
+
+&emsp;&emsp;该值必须为`constant_pool`表的有效索引。对应记录给出了该属性的值。且该记录的类型必须能跟该字段的类型对应上，见表4.7.2-A。
+
+**表4.7.2-A 常量值属性类型**
+
+|**字段类型**|**记录类型**
+|-|-
+|int,short,char,byte,boolean|CONSTANT_Integer
+|float|CONSTANT_Float
+|long|CONSTANT_Long
+|double|CONSTANT_Double
+|String|CONSTANT_String
