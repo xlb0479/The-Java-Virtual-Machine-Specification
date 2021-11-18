@@ -1283,3 +1283,70 @@ ConstantValue_attribute {
 |long|CONSTANT_Long
 |double|CONSTANT_Double
 |String|CONSTANT_String
+
+### 4.7.3 Code属性
+
+该属性是`method_info`结构体（§4.6）的`attributes`表中的一个变长属性。该属性中包含了JVM指令以及方法的一些辅助信息，这些方法包括实例初始化方法以及类或接口初始化方法（§2.9.1, §2.9.2）。
+
+如果该方法是`native`或`abstract`，且不是类或接口初始化方法，那么它的`method_info`结构体的`attributes`表中就不能包含`Code`属性。否则，它的`attributes`表中就必须仅包含一个`Code`属性。
+
+`Code`属性格式如下：
+
+```
+Code_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 max_stack;
+    u2 max_locals;
+    u4 code_length;
+    u1 code[code_length];
+    u2 exception_table_length;
+    {   u2 start_pc;
+        u2 end_pc;
+        u2 handler_pc;
+        u2 catch_type;
+    } exception_table[exception_table_length];
+    u2 attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），表达的字符串值为“`Code`”。
+
+`attribute_length`
+
+&emsp;&emsp;代表该属性的长度，包含开头的六个字节。
+
+`max_stack`
+
+&emsp;&emsp;给出该方法的操作数栈在任意执行点时的最大深度（§2.6.2）。
+
+`max_locals`
+
+&emsp;&emsp;给出调用该方法时分配的局部变量数组中的局部变量个数（§2.6.1），包括在调用时用来传参的局部变量。
+
+&emsp;&emsp;`long`或`double`类型的值的局部变量索引最大为`max_locals - 2`。其他类型值的局部变量索引最大为`max_locals - 1`。
+
+`code_length`
+
+&emsp;&emsp;代表该方法的`code`数组的长度。
+
+&emsp;&emsp;必须大于零（`code`数组不能为空）且小于65536。
+
+`code[]`
+
+&emsp;&emsp;包含用来实现该方法的JVM代码的真实字节。
+
+&emsp;&emsp;当该数组被读入到一个字节可寻址机器的内存中时，如果该数组的首字节对齐到了4字节边界，那么*tableswitch*和*lookupswitch*的32位偏移量也会对齐到4字节。（关于`code`数组对齐的结果，可以到这些指令的描述信息中查看详细的介绍。）
+
+`exception_table_length`
+
+&emsp;&emsp;代表`exception_table`数组包含的记录数。
+
+`exception_table[]`
+
+&emsp;&emsp;
