@@ -1390,3 +1390,41 @@ Code_attribute {
 &emsp;&emsp;相关规则见§4.7。
 
 &emsp;&emsp;非预定义属性的相关规则见§4.7.1。
+
+### 4.7.4 StackMapTable属性
+
+它是`Code`属性（§4.7.3）的`attributes`表中的一个变长属性。该属性用于类型检查校验（§4.10.1）。
+
+一个`Code`属性的`attributes`表中最多只能有一个`StackMapTable`属性。
+
+当`class`文件版本号大于等于50.0，如果方法的`Code`属性不包含`StackMapTable`属性，那它会有一个*隐式的栈映射属性*（§4.10.1）。隐式栈映射属性相当于一个`number_of_entries`等于零的`StackMapTable`。
+
+该属性格式如下：
+
+```
+StackMapTable_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 number_of_entries;
+    stack_map_frame entries[number_of_entries];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;它的值必须是`constant_pool`表的有效索引。对应的记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串“`StackMapTable`”。
+
+`attribute_length`
+
+&emsp;&emsp;代表属性的长度，包括开头的六个字节。
+
+`number_of_entries`
+
+&emsp;&emsp;代表`entries`表中`stack_map_frame`记录的个数。
+
+`entries[]`
+
+&emsp;&emsp;表中的每条记录代表该方法的一个栈映射帧。它们在该表中的顺序是很重要滴。
+
