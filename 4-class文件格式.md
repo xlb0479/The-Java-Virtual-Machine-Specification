@@ -1349,4 +1349,44 @@ Code_attribute {
 
 `exception_table[]`
 
-&emsp;&emsp;
+&emsp;&emsp;这个表里的每条记录代表`code`数组中的一个异常处理器。它们在该表中的顺序时很重要滴（§2.10）。
+
+&emsp;&emsp;每条记录包含以下字段：
+
+&emsp;&emsp;`start_pc`，`end_pc`
+
+&emsp;&emsp;&emsp;&emsp;它们俩的值代表了该异常处理器在`code`数组中的激活范围。`start_pc`必须是`code`数组中某个指令操作码的有效索引。`end_pc`同样必须是这样，或者也可以等于`code_length`，也就是`code`数组的长度。`start_pc`必须小于`end_pc`。
+
+&emsp;&emsp;&emsp;&emsp;包含`start_pc`但不包含`end_pc`；也就是程序计数器位于`[start_pc,end_pc)`范围内时，该异常处理器必须处于激活状态。
+
+&emsp;&emsp;&emsp;&emsp;这个范围为什么不能包含`end_pc`是JVM在设计上的一个历史性的错误：如果一个方法的JVM代码正好是65535个字节，并且以一个1字节指令结束，那么这个指令就无法被异常处理器保护起来。编译器的开发者可以通过限制各种方法，包括实例初始化方法或静态初始化器，生成的JVM代码大小（`code`数组的长度 ）来规避这个bug，限制到65534个字节。
+
+&emsp;&emsp;`handler_pc`
+
+&emsp;&emsp;&emsp;&emsp;表示异常处理器的开始。它的值必须是`code`数组中某条指令操作码的有效索引。
+
+&emsp;&emsp;`catch_type`
+
+&emsp;&emsp;&emsp;&emsp;如果它的值非零，那就必须是`constant_pool`的有效索引。对应的记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表该异常处理器要捕获的异常类。只有当抛出的异常时指定类或其子类的一个实例时才会调用该异常处理器。
+
+&emsp;&emsp;&emsp;&emsp;校验器会检查这个类是否是`Throwable`或其子类（§4.9.2）。
+
+&emsp;&emsp;&emsp;&emsp;如果它的值是零，该异常处理器则用来捕获所有的异常。
+
+&emsp;&emsp;&emsp;&emsp;这是用来实现`finally`的（§3.13）。
+
+`attributes_count`
+
+&emsp;&emsp;代表`Code`属性中属性的数量。（额。。。属性的属性。属属属属属属属。。。）
+
+`attributes[]`
+
+&emsp;&emsp;其中每个值必须是一个`attribute_info`结构体（§4.7）。
+
+&emsp;&emsp;一个`Code`属性可以有任意多个可选的关联属性。
+
+&emsp;&emsp;本书中定义的可以出现在此处的属性见表4.7-C。
+
+&emsp;&emsp;相关规则见§4.7。
+
+&emsp;&emsp;非预定义属性的相关规则见§4.7.1。
