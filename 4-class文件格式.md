@@ -1428,3 +1428,115 @@ StackMapTable_attribute {
 
 &emsp;&emsp;表中的每条记录代表该方法的一个栈映射帧。它们在该表中的顺序是很重要滴。
 
+一个*栈映射帧*声明了（显式或隐式的）它所应用的字节码偏移量，以及在对应偏移量上的局部变量以及操作数栈记录的校验类型。
+
+`entries`表中的每一个栈映射帧的部分语义都会依赖于它的前一帧。方法的第一个栈映射帧是隐式的，是类型检查器（§4.10.1.6）根据方法描述符计算得出的。因此`entries[0]`处的`stack_map_frames`结构体描述的是方法中的第二个栈映射帧。
+
+栈映射帧使用的*字节码偏移量*是根据帧中的`offset_delta`（显式或隐式的）计算出来的，并且通过`offset_delta + 1`就可以得出前一帧的字节码偏移量，除非前一帧是方法的初始帧。此时，这个栈映射帧应用的字节码偏移量就等于帧中声明的`offset_delta`。
+
+<pre>我们用这种偏移量的变化量，而不是直接保存真正的字节码偏移量，这样我们可以从定义上保证栈映射帧的顺序是正确的。而且，对所有的显式帧（相对于开头的隐式帧）使用offset_delta + 1这种公式，我们能够保证不会出现重复数据。</pre>
+
+我们说一个指令在字节码中有一个*关联栈映射帧*，前提是这个指令位于一个`Code`属性的`code`数组中的偏移量*i*，并且这个`Code`属性有一个`StackMapTable`属性，它的`entries`数组中有一个栈映射帧是应用在字节码偏移量*i*处的。
+
+一个*校验类型*声明了一处或两处位置的类型，这个*位置*对应一个局部变量或者一条操作数栈的记录。一个校验类型通过一个可区分共用体来表达，`verification_type_info`，它包含了一个单字节标记，代表共用体中正在使用的元素，然后跟着零或多个字节，给出该标记的其他详细信息。
+
+```
+union verification_type_info {
+    Top_variable_info;
+    Integer_variable_info;
+    Float_variable_info;
+    Long_variable_info;
+    Double_variable_info;
+    Null_variable_info;
+    UninitializedThis_variable_info;
+    Object_variable_info;
+    Uninitialized_variable_info;
+}
+```
+
+一个校验类型声明一处局部变量表或操作数栈中的位置，需要通过`verification_type_info`共用体的以下属性进行表达：
+
+- `Top_variable_info`代表该局部变量拥有校验类型`top`。
+
+```
+Top_variable_info {
+    u1 tag = ITEM_Top; /* 0 */
+}
+```
+
+- `Integer_variable_info`代表该位置拥有校验类型`int`。
+
+```
+Integer_variable_info {
+    u1 tag = ITEM_Integer; /* 1 */
+}
+```
+
+- `Float_variable_info`代表该位置拥有校验类型`float`。
+
+```
+Float_variable_info {
+    u1 tag = ITEM_Float; /* 2 */
+}
+```
+
+- `Null_variable_info`代表该位置拥有校验类型`null`。
+
+```
+Null_variable_info {
+    u1 tag = ITEM_Null; /* 5 */
+}
+```
+
+- `UninitializedThis_variable_info`代表该位置拥有校验类型`uninitializedThis`。
+
+```
+UninitializedThis_variable_info {
+    u1 tag = ITEM_UninitializedThis; /* 6 */
+}
+```
+
+- `Object_variable_info`代表该位置的校验类型要通过`constant_pool`表中`cpool_index`索引处的`CONSTANT_Class_info`结构体（§4.4.1）来进行表达。
+
+```
+Object_variable_info {
+    u1 tag = ITEM_Object; /* 7 */
+    u2 cpool_index;
+}
+```
+
+- `Uninitialized_variable_info`代表该位置的校验类型为`uninitialized(Offset)`。其中`Offset`代表`Code`属性中`code`数组包含`StackMapTable`属性的偏移量，对应的*new*指令用来创建保存在该位置中的对象。
+
+```
+Uninitialized_variable_info {
+    u1 tag = ITEM_Uninitialized; /* 8 */
+    u2 offset;
+}
+```
+
+一个校验类型如果要声明两处局部变量数组或操作数栈中的位置，那就要使用`verification_type_info`共用体的以下属性：
+
+- `Long_variable_info`代表两个位置中的第一个拥有校验类型`long`。
+
+```
+Long_variable_info {
+    u1 tag = ITEM_Long; /* 4 */
+}
+```
+
+- `Double_variable_info`代表两个位置中的第一个拥有校验类型`double`。
+
+```
+Double_variable_info {
+    u1 tag = ITEM_Double; /* 3 */
+}
+```
+
+- `Long_variable_info`和`Double_variable_info`按照以下方法表达两个位置中第二个位置的校验类型：
+    - 如果第一个位置是一个局部变量，那么：
+        - 它不能是最高索引处的局部变量。
+        - 次高位的局部变量的校验类型为`top`。
+    - 如果第一个位置是一条操作数栈记录，那么：
+        - 它不能是操作数栈顶位置。
+        - 操作数栈的次顶位置的校验类型为`top`。
+
