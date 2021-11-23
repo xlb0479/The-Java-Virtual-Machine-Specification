@@ -1540,3 +1540,84 @@ Double_variable_info {
         - 它不能是操作数栈顶位置。
         - 操作数栈的次顶位置的校验类型为`top`。
 
+一个栈映射帧要用一个可区分共用体表达，`stack_map_frame`，它包含一个单字节标记，表示当前使用的是哪个元素，然后跟着零或多个字节，给出关于此标记的详细信息。
+
+```
+union stack_map_frame {
+    same_frame;
+    same_locals_1_stack_item_frame;
+    same_locals_1_stack_item_frame_extended;
+    chop_frame;
+    same_frame_extended;
+    append_frame;
+    full_frame;
+}
+```
+
+标记是用来表示该栈映射帧的*帧类型*：
+
+- 标记值范围在[0-63]之间表示的帧类型为`same_frame`。这种类型表示这一帧跟前一帧拥有相同的局部变量，并且操作数栈是空的。这一帧的`offset_delta`值就是标记的值，`frame_type`。
+
+```
+same_frame {
+    u1 frame_type = SAME; /* 0-63 */
+}
+```
+
+- 标记值在[64,127]之间表示的帧类型为`same_locals_1_stack_item_frame`。这种类型表示这一帧跟前一帧拥有相同的局部变量，并且操作数栈只有一条记录。这种帧的`offset_delta`值的计算方式是`frame_type - 64`。这一条栈记录的校验类型出现在帧类型的后面。
+
+```
+same_locals_1_stack_item_frame {
+    u1 frame_type = SAME_LOCALS_1_STACK_ITEM; /* 64-127 */
+    verification_type_info stack[1];
+}
+```
+
+- [128-246]范围内的标记值保留，以后再用。
+
+- `same_locals_1_stack_item_frame_extended`帧类型的标记值为247。这种类型表示这一帧跟前一帧拥有相同的局部变量，并且操作数栈只有一条记录。这种帧的`offset_delta`值是直给的，不像`same_locals_1_stack_item_frame`。这一条栈记录的校验类型出现在`offset_delta`的后面。
+
+```
+same_locals_1_stack_item_frame_extended {
+    u1 frame_type = SAME_LOCALS_1_STACK_ITEM_EXTENDED; /* 247 */
+    u2 offset_delta;
+    verification_type_info stack[1];
+}
+```
+
+- `chop_frame`帧类型的标记值范围是[248-250]。这种类型表示这一帧跟前一帧拥有相同的局部变量，但缺少最后*k*个局部变量，并且操作数栈是空的。*k*的值由`251 - frame_type`得出。这种帧的`offset_delta`值也是直给的。
+
+```
+chop_frame {
+    u1 frame_type = CHOP; /* 248-250 */
+    u2 offset_delta;
+}
+```
+
+&emsp;&emsp;假设前一帧的局部变量的校验类型由`locals`给出，该数组结构同`full_frame`帧类型。如果前一帧中的`locals[M-1]`代表局部变量*X*，`locals[M]`代表局部变量*Y*，那么移除一个局部变量的结果就是`locals[M-1]`在新的帧中代表局部变量*X*，而`locals[M]`则是未定义的。
+
+&emsp;&emsp;如果*k*大于前一帧`locals`中的局部变量的个数则是不正确的，会导致新帧中的局部变量的个数小于零。
+
+- `same_frame_extended`帧类型的标记值是251。这种类型表示这一帧跟前一帧拥有相同的局部变量，并且操作数栈为空。该帧的`offset_delta`值也是直给的，不像`same_frame`。
+
+```
+same_frame_extended {
+    u1 frame_type = SAME_FRAME_EXTENDED; /* 251 */
+    u2 offset_delta;
+}
+```
+
+- `append_frame`帧类型的标记值范围是[252-254]。这种类型表示这一帧跟前一帧拥有相同的局部变量，但是额外定义了*k*个局部变量，并且操作数栈为空。*k*的值由`frame_type - 251`给出。该帧的`offset_delta`值也是直给的。
+
+```
+append_frame {
+    u1 frame_type = APPEND; /* 252-254 */
+    u2 offset_delta;
+    verification_type_info locals[frame_type - 251];
+}
+```
+
+&emsp;&emsp;`locals`中的第0个记录代表首个额外局部变量的校验类型。假设`locals[M]`代表局部变量`N`，那么：
+
+    - 如果`locals[M]`属于`Top_variable_info`、`Integer_variable_info`、`Float_variable_info`、`Null_variable_info`、`UninitializedThis_variable_info`、`Object_variable_info`、`Uninitialized_variable_info`之一，那么`locals[M+1]`代表局部变量`N+1`；并且
+    - 如果`locals[M]`属于`Long_variable_info`或`Double_variable_info`，那么`locals[M+1]`代表局部变量N+2。
