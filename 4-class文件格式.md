@@ -1651,3 +1651,48 @@ full_frame {
 &emsp;&emsp;- 如果`stack[M]`属于`Long_variable_info`或`Double_variable_info`，那么`stack[M+1]`代表栈记录`N+2`。
 
 &emsp;&emsp;对于任意索引*i*，如果`stack[i]`代表的栈记录的索引大于该方法操作数栈大小的最大值的话，那就是不正确的。
+
+### 4.7.5 Exceptions属性
+
+它也是个变长属性。该属性揭示了一个方法可能会抛出的已检查异常。
+
+在一个`method_info`结构体的`attributes`表中，最多只能有一个`Exceptions`属性。
+
+该属性格式如下：
+
+```
+Exceptions_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 number_of_exceptions;
+    u2 exception_index_table[number_of_exceptions];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），字符串值为“`Exceptions`”。
+
+`attribute_length`
+
+&emsp;&emsp;表示该属性的长度，包含开头的六个字节。
+
+`number_of_exceptions`
+
+&emsp;&emsp;表示`exception_index_table`表中的记录数。
+
+`exception_index_table[]`
+
+&emsp;&emsp;数组中的每个值必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），即该方法声明的要抛出的异常类型。
+
+&emsp;&emsp;方法要想抛出一个异常，必须至少满足以下三个条件之一：
+
+&emsp;&emsp;- 异常是`RuntimeException`或其子类的实例。
+
+&emsp;&emsp;- 异常是`Error`或其子类的实例。
+
+&emsp;&emsp;- 异常是`exception_index_table`表中给出的异常类或其子类的实例。
+
+&emsp;&emsp;JVM并不强制要求这些条件；它们是编译器要求的。
