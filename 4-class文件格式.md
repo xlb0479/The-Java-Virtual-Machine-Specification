@@ -1619,5 +1619,5 @@ append_frame {
 
 &emsp;&emsp;`locals`中的第0个记录代表首个额外局部变量的校验类型。假设`locals[M]`代表局部变量`N`，那么：
 
-    - 如果`locals[M]`属于`Top_variable_info`、`Integer_variable_info`、`Float_variable_info`、`Null_variable_info`、`UninitializedThis_variable_info`、`Object_variable_info`、`Uninitialized_variable_info`之一，那么`locals[M+1]`代表局部变量`N+1`；并且
-    - 如果`locals[M]`属于`Long_variable_info`或`Double_variable_info`，那么`locals[M+1]`代表局部变量N+2。
+&emsp;&emsp;- 如果`locals[M]`属于`Top_variable_info`、`Integer_variable_info`、`Float_variable_info`、`Null_variable_info`、`UninitializedThis_variable_info`、`Object_variable_info`、`Uninitialized_variable_info`之一，那么`locals[M+1]`代表局部变量`N+1`；并且
+&emsp;&emsp;- 如果`locals[M]`属于`Long_variable_info`或`Double_variable_info`，那么`locals[M+1]`代表局部变量N+2。
