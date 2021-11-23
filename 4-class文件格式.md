@@ -1620,4 +1620,34 @@ append_frame {
 &emsp;&emsp;`locals`中的第0个记录代表首个额外局部变量的校验类型。假设`locals[M]`代表局部变量`N`，那么：
 
 &emsp;&emsp;- 如果`locals[M]`属于`Top_variable_info`、`Integer_variable_info`、`Float_variable_info`、`Null_variable_info`、`UninitializedThis_variable_info`、`Object_variable_info`、`Uninitialized_variable_info`之一，那么`locals[M+1]`代表局部变量`N+1`；并且
-&emsp;&emsp;- 如果`locals[M]`属于`Long_variable_info`或`Double_variable_info`，那么`locals[M+1]`代表局部变量N+2。
+&emsp;&emsp;- 如果`locals[M]`属于`Long_variable_info`或`Double_variable_info`，那么`locals[M+1]`代表局部变量`N+2`。
+
+&emsp;&emsp;对于任意索引*i*，如果`locals[i]`代表的局部变量的索引大于该方法局部变量数量最大值的话，那就是不正确的。
+
+- `full_frame`帧类型的标记值是255。该帧的`offset_delta`值也是直给的。
+
+```
+full_frame {
+    u1 frame_type = FULL_FRAME; /* 255 */
+    u2 offset_delta;
+    u2 number_of_locals;
+    verification_type_info locals[number_of_locals];
+    u2 number_of_stack_items;
+    verification_type_info stack[number_of_stack_items];
+}
+```
+
+&emsp;&emsp;`locals`中的第0个记录代表局部变量0的校验类型。假设`locals[M]`代表局部变量`N`，那么：
+
+&emsp;&emsp;- 如果`locals[M]`属于`Top_variable_info`、`Integer_variable_info`、`Float_variable_info`、`Null_variable_info`、`UninitializedThis_variable_info`、`Object_variable_info`、`Uninitialized_variable_info`之一，那么`locals[M+1]`代表局部变量`N+1`；并且
+&emsp;&emsp;- 如果`locals[M]`属于`Long_variable_info`或`Double_variable_info`，那么`locals[M+1]`代表局部变量`N+2`。
+
+&emsp;&emsp;对于任意索引*i*，如果`locals[i]`代表的局部变量的索引大于该方法局部变量数量最大值的话，那就是不正确的。
+
+&emsp;&emsp;`stack`中的第0条记录代表操作数栈底的校验类型，`stack`中越往后的记录代表的校验类型对应的栈记录离栈顶越近。我们将栈底记录记为0记录，然后往后就是记录1，2这样。假设`stack[M]`代表栈记录`N`，那么：
+
+&emsp;&emsp;- 如果`stack[M]`属于`Top_variable_info`、`Integer_variable_info`、`Float_variable_info`、`Null_variable_info`、`UninitializedThis_variable_info`、`Object_variable_info`、`Uninitialized_variable_info`之一，那么`stack[M+1]`代表栈记录`N+1`；并且
+
+&emsp;&emsp;- 如果`stack[M]`属于`Long_variable_info`或`Double_variable_info`，那么`stack[M+1]`代表栈记录`N+2`。
+
+&emsp;&emsp;对于任意索引*i*，如果`stack[i]`代表的栈记录的索引大于该方法操作数栈大小的最大值的话，那就是不正确的。
