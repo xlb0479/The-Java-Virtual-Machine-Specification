@@ -1654,7 +1654,7 @@ full_frame {
 
 ### 4.7.5 Exceptions属性
 
-它是`method_info`结构体的`attributes`表中的一个变长属性。该属性揭示了一个方法可能会抛出的已检查异常。
+它是`method_info`结构体（§4.6）的`attributes`表中的一个变长属性。该属性揭示了一个方法可能会抛出的已检查异常。
 
 在一个`method_info`结构体的`attributes`表中，最多只能有一个`Exceptions`属性。
 
@@ -1699,3 +1699,4 @@ Exceptions_attribute {
 
 ### 4.7.6 InnerClasses属性
 
+它是`ClassFile`结构体（）
