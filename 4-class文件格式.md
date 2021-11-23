@@ -1654,7 +1654,7 @@ full_frame {
 
 ### 4.7.5 Exceptions属性
 
-它也是个变长属性。该属性揭示了一个方法可能会抛出的已检查异常。
+它是`method_info`结构体的`attributes`表中的一个变长属性。该属性揭示了一个方法可能会抛出的已检查异常。
 
 在一个`method_info`结构体的`attributes`表中，最多只能有一个`Exceptions`属性。
 
@@ -1696,3 +1696,6 @@ Exceptions_attribute {
 &emsp;&emsp;- 异常是`exception_index_table`表中给出的异常类或其子类的实例。
 
 &emsp;&emsp;JVM并不强制要求这些条件；它们是编译器要求的。
+
+### 4.7.6 InnerClasses属性
+
