@@ -1782,3 +1782,45 @@ InnerClasses_attribute {
 &emsp;&emsp;如果`class`文件的版本号大于等于51.0，并且`attributes`表中有一个`InnerClasses`属性，那么对于这个`InnerClasses`属性来说，它的`classes`表中的所有记录，如果`inner_name_index`是零，`outer_class_info_index`就也得是零。
 
 &emsp;&emsp;Oracle的JVM并不会检查`InnerClasses`属性和它所引用的类或接口的`class`文件的一致性。
+
+### 4.7.7 EnclosingMethod属性
+
+这个属性是`ClassFile`结构体（§4.1）的`attributes`表中的一个定长属性。一个类必须要有一个`EnclosingMethod`属性，当且仅当它表达的是一个局部类或匿名类（JLS §14.3, JLS
+§15.9.5）。
+
+在一个`ClassFile`结构体的`attributes`表中最多只能有一个`EnclosingMethod`属性。
+
+该属性格式如下：
+
+```
+EnclosingMethod_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 class_index;
+    u2 method_index;
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串“`EnclosingMethod`”。
+
+`attribute_length`
+
+&emsp;&emsp;这个值必须等于四。
+
+`class_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表包裹当前类最近的那个类。
+
+`method_index`
+
+&emsp;&emsp;如果当前类不是被一个方法或构造方法立即包裹住，那么这个值必须是零。
+
+>特别的，如果当前类在源码中被实例初始化器、静态初始化器、实例变量初始化器或类变量初始化器立即包裹住，那么该值必须是零。（前两个考虑的是局部类和匿名类，后两个考虑的是在字段赋值的时候表达式右边声明的那种匿名类。）
+
+&emsp;&emsp;否则，这个值必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_NameAndType_info`结构体（§4.4.6），代表上面的`class_index`属性引用的类中的一个方法的名字和类型。
+
+>要保证`method_index`标识的方法的确是包裹当前类最近的那个方法，这个事儿是编译器的责任。
