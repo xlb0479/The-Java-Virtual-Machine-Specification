@@ -1776,3 +1776,9 @@ InnerClasses_attribute {
 |`ACC_SYNTHETIC`|0x1000|复合声明；源码中看不出来。
 |`ACC_ANNOTATION`|0x2000|注解接口声明。
 |`ACC_ENUM`|0x4000|`enum`类声明。
+
+&emsp;&emsp;&emsp;&emsp;表中没有给出的比特位留着以后用。生成`class`文件的时候这些位置都应该置零，而且JVM实现也应该忽略它们。
+
+&emsp;&emsp;如果`class`文件的版本号大于等于51.0，并且`attributes`表中有一个`InnerClasses`属性，那么对于这个`InnerClasses`属性来说，它的`classes`表中的所有记录，如果`inner_name_index`是零，`outer_class_info_index`就也得是零。
+
+&emsp;&emsp;Oracle的JVM并不会检查`InnerClasses`属性和它所引用的类或接口的`class`文件的一致性。
