@@ -1699,4 +1699,80 @@ Exceptions_attribute {
 
 ### 4.7.6 InnerClasses属性
 
-它是`ClassFile`结构体（）
+它是`ClassFile`结构体（§4.1）的`attributes`表中的变长属性。
+
+对于一个类或接口*C*的常量池来说，如果它至少包含了一条`CONSTANT_Class_info`记录（§4.4.1），并且该记录表达的类或接口并不属于某个包的成员，那么*C*的`ClassFile`结构体的`attributes`表中必须且只能有一个`InnerClasses`属性。
+
+格式如下：
+
+```
+InnerClasses_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 number_of_classes;
+    {   u2 inner_class_info_index;
+        u2 outer_class_info_index;
+        u2 inner_name_index;
+        u2 inner_class_access_flags;
+    } classes[number_of_classes];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），字符串值为“`InnerClasses`”。
+
+`attribute_length`
+
+&emsp;&emsp;表示该属性的长度，包含开头的六个字节。
+
+`number_of_classes`
+
+&emsp;&emsp;表示`classes`表中的记录数。
+
+`classes[]`
+
+&emsp;&emsp;如果`constant_pool`表中的`CONSTANT_Class_info`记录表达的类或接口*C*非包成员，那么在`classes`数组中它必须且只能有一条对应的记录。
+
+&emsp;&emsp;如果一个类或接口的成员中也有类或接口，它的`constant_pool`表（以及它的`InnerClasses`属性）必须要引用每一个这种成员（JLS §13.1），即便该成员在其他地方没有用到。
+
+&emsp;&emsp;而且，每个被嵌套的类和接口的`constant_pool`表中必须要引用它外层的类，这样把一切归拢到一起来看，每个被嵌套的类和接口的`InnerClasses`信息就包含每一个外层类以及每一个内部的嵌套类或嵌套接口。（这段我有点懵，你去看看原文吧。）
+
+&emsp;&emsp;`classes`数组中的每个记录都包含以下四个字段：
+
+&emsp;&emsp;`inner_class_info_index`
+
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Class_info`结果透体，代表*C*。
+
+&emsp;&emsp;`outer_class_info_index`
+
+&emsp;&emsp;&emsp;&emsp;如果*C*不是某个类或接口的成员——即顶层类或接口（JLS §7.6），或局部类（JLS §14.3），或匿名类（JLS §15.9.5）——那么该值必须为零。
+
+&emsp;&emsp;&emsp;&emsp;否则，该值必须是`constant_pool`表的有效索引，对应记录必须是一个`CONSTANT_Class_info`结构体，代表一个类或接口，而*C*是它的一个成员。`outer_class_info_index`不能等于`inner_class_info_index`。
+
+&emsp;&emsp;`inner_name_index`
+
+&emsp;&emsp;&emsp;&emsp;如果*C*是匿名的（JLS §15.9.5），该值必须是零。
+
+&emsp;&emsp;&emsp;&emsp;否则，该值必须是`constant_pool`表的有效索引，对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表*C*的原始基本名（译者注：original simple name），就跟该`class`文件对应的源码中名字的一样。
+
+&emsp;&emsp;`inner_class_access_flags`
+
+&emsp;&emsp;&emsp;&emsp;它是一个标记掩码，用来标记类或接口*C*的访问权限和属性，也就是`class`文件对应源码中声明的那样。在源码不可用的时候，编译器可以用它们来恢复原始信息。各种标记见表4.7.6-A。
+
+&emsp;&emsp;&emsp;&emsp;**表4.7.6-A 嵌套类的访问和属性标记**
+
+|**标记名**|**值**|**解释**
+|-|-|-
+|`ACC_PUBLIC`|0x0001|在源码中主动标记或隐式的`public`。
+|`ACC_PRIVATE`|0x0002|在源码中标记`private`。
+|`ACC_PROTECTED`|0x0004|在源码中标记`protected`。
+|`ACC_STATIC`|0x0008|在源码中主动标记或隐式的`static`。
+|`ACC_FINAL`|0x0010|在源码中主动标记或隐式的`final`。
+|`ACC_INTERFACE`|0x0200|在源码中是一个`interface`。
+|`ACC_ABSTRACT`|0x0400|在源码中主动标记或隐式的`abstract`。
+|`ACC_SYNTHETIC`|0x1000|复合声明；源码中看不出来。
+|`ACC_ANNOTATION`|0x2000|注解接口声明。
+|`ACC_ENUM`|0x4000|`enum`类声明。
