@@ -1887,3 +1887,38 @@ Signature_attribute {
 &emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），如果该`Signature`属性是一个`ClassFile`结构体的属性，那它就代表一个类的签名；如果是`method_info`结构体的属性，那它就代表一个方法签名；或者就是字段签名。
 
 >Oracle的JVM在类加载或链接的过程中不会去检查`Signature`属性结构是否完好。它的检查是JavaSE平台类库中那些暴露泛型类、接口、构造器、方法、字段签名的方法去检查的。比如`Class`中的`getGenericSuperclass`和`java.lang.reflect.Executable`中的`toGenericString`。
+
+#### 4.7.9.1 *签名*
+
+*签名*可以对Java语言中使用JVM类型体系之外的类型声明进行编码。支持反射和调试，以及只有`class`文件时的编译场景。
+
+对于每一个类、接口、构造器、方法、字段或record成分，在声明中使用了类型变量或参数化类型，Java编译器必须要给出一个签名。特别是，一个Java编译器必须要给出：
+
+- 类签名。对于任意类或接口声明，如果是泛型的，或者是有参数化类型作为父类或父接口，或者两者兼有，此时必须要给出类签名。
+- 方法签名。对于任意方法或构造器声明，如果是泛型的，或者是有类型参数或参数化类型作为返回类型或形参类型的，又或者是在`throws`语法中带类型变量的，又或者是这些情况的任意组合，此时必须要给出方法签名。
+- 字段签名。对于任意字段、形参、局部变量或record成分声明，如果类型中使用了类型变量或参数化类型，此时必须要给出字段签名。
+
+签名使用§4.3.1节讲的标记语法进行声明。另外：
+
+- 在一个产生式的右边，*[x]*语法表示x出现零次或一次。意即，x是一个*可选符号*。如果包含了可选符号，实际上就定义了两种情况：带和不带。
+- 如果右边特别长，可以在下一行继续写，下一行会有明确的缩进。
+
+语法中包含了终结符*标识符*，表示由Java编译器生成的类型、字段、方法、形参、局部变量或类型变量的名字。这种名字不能包含任何ASCII字符`.;[/<>:`（也就是说，方法名中禁止的字符（§4.2.2）再加上冒号）但是可以包含Java语言标识符中禁止出现的字符（JLS §3.8）。
+
+签名是一种多层非终结符，即*类型签名*：
+
+- 一个*Java类型签名*代表Java语言中的一个引用类型或基本类型。
+
+&emsp;&emsp;&emsp;&emsp;*JavaTypeSignature:*
+
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ReferenceTypeSignature*
+
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*BaseType*
+
+&emsp;&emsp;&emsp;&emsp;<p style="font-size: 2px">为了方便参考，我们把§4.3.2节的产生式搬过来了：</p>
+
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<p style="font-size: 2px"><i>BaseType:</i></p>
+
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<p style="font-size: 2px"><i>(one of)</i></p>
+
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<p style="font-size: 2px"><code>B C D F I J S Z</code></p>
