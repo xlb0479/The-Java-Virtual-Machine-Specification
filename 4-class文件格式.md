@@ -1922,3 +1922,16 @@ Signature_attribute {
 <sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<i>(one of)</i></sub>
 
 <sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<code>B C D F I J S Z</code></sub>
+
+- 一个*引用类型签名*代表一个Java语言中的引用类型，也就是一个类或一个接口、类型变量或一个数组类型。
+
+&emsp;&emsp;一个*类类型签名*代表一个（可能是参数化的）类或接口类型。一个类类型签名必须得规划好了，这样才能在擦除类型参数并将每个`.`字符转换成`$`字符后可靠的映射到类的二进制名上。
+
+&emsp;&emsp;一个*类型变量签名*代表一个类型变量。
+
+&emsp;&emsp;一个*数组类型签名*代表一个数组类型中的一维。
+
+&emsp;&emsp;&emsp;&emsp;*ReferenceTypeSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*TypeVariableSignature*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ArrayTypeSignature*
