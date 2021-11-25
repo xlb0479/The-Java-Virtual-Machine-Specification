@@ -1855,3 +1855,35 @@ Synthetic_attribute {
 `attribute_length`
 
 &emsp;&emsp;必须是零。
+
+### 4.7.9 Signature属性
+
+它是`ClassFile`、`field_info`、`method_info`、`record_component_info`结构体（§4.1, §4.5, §4.6, §4.7.30）`attributes`表中的一个定长属性。它为类、接口、构造器、方法、字段或record成分保存了一个签名信息，而且它们在Java语言中声明的时候都用了类型变量或参数化类型。关于这些结构的知识可以去看*Java语言规范，JavaSE 第17版*。
+
+在一个`ClassFile`、`field_info`、`method_info`、`record_component_info`结构体中，`attributes`表中最多只能有一个`Signature`属性。
+
+格式如下：
+
+```
+Signature_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 signature_index;
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`Signature`”。
+
+`attribute_length`
+
+&emsp;&emsp;必须是二。
+
+`signature_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），如果该`Signature`属性是一个`ClassFile`结构体的属性，那它就代表一个类的签名；如果是`method_info`结构体的属性，那它就代表一个方法签名；或者就是字段签名。
+
+>Oracle的JVM在类加载或链接的过程中不会去检查`Signature`属性结构是否完好。它的检查是JavaSE平台类库中那些暴露泛型类、接口、构造器、方法、字段签名的方法去检查的。比如`Class`中的`getGenericSuperclass`和`java.lang.reflect.Executable`中的`toGenericString`。
