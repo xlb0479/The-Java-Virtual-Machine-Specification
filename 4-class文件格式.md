@@ -1915,10 +1915,10 @@ Signature_attribute {
 
 &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*BaseType*
 
-&emsp;&emsp;&emsp;&emsp;<p style="font-size: 2px">为了方便参考，我们把§4.3.2节的产生式搬过来了：</p>
+<div style="font-size: 2px">&emsp;&emsp;&emsp;&emsp;为了方便参考，我们把§4.3.2节的产生式搬过来了：</p>
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<p style="font-size: 2px"><i>BaseType:</i></p>
+<p style="font-size: 2px">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<i>BaseType:</i></p>
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<p style="font-size: 2px"><i>(one of)</i></p>
+<p style="font-size: 2px">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<i>(one of)</i></p>
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<p style="font-size: 2px"><code>B C D F I J S Z</code></p>
+<p style="font-size: 2px">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<code>B C D F I J S Z</code></p>
