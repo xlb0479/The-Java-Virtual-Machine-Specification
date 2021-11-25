@@ -1824,3 +1824,34 @@ EnclosingMethod_attribute {
 &emsp;&emsp;否则，这个值必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_NameAndType_info`结构体（§4.4.6），代表上面的`class_index`属性引用的类中的一个方法的名字和类型。
 
 >要保证`method_index`标识的方法的确是包裹当前类最近的那个方法，这个事儿是编译器的责任。
+
+### 4.7.8 Synthetic属性
+
+该属性属于`ClassFile`、`field_info`、`method_info`结构体（§4.1, §4.5, §4.6）的`attributes`表，是一个定长属性。如果一个类的成员没有出现在源码中，那就必须要用`Synthetic`属性来标记，或者必须要设置`ACC_SYNTHETIC`标记。唯一的特例是那些编译器生成的成员，且在实现物中不做考虑，例如：
+
+- 一个实例初始化方法，代表Java语言中的默认构造器（§2.9.1）
+- 一个类或接口的初始化方法（§2.9.2）
+- 枚举和record类中隐式声明的成员（JLS §8.9.3, JLS §8.10.3）
+
+>`Synthetic`属性是打JDK1.1引入的，用来支持嵌套类和嵌套接口。
+
+在`class`文件中有一处限制就是说只有形参和模块可以打`ACC_MANDATED`标记（§4.7.24, §4.7.25），这样的意思就是尽管是编译器生成的，但它们也不在实现物的考虑范围之内。其他编译器生成的玩意儿是没有办法对其进行标记从而不做实现物考虑的（JLS §13.1）。这种限制就意味着JavaSE中的反射API可能无法准确的给出这种玩意儿的“被mandated”的状态。
+
+该属性结构如下：
+
+```
+Synthetic_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`Synthetic`”。
+
+`attribute_length`
+
+&emsp;&emsp;必须是零。
