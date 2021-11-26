@@ -1909,18 +1909,14 @@ Signature_attribute {
 
 - 一个*Java类型签名*代表Java语言中的一个引用类型或基本类型。
 
-&emsp;&emsp;&emsp;&emsp;*JavaTypeSignature:*
-
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ReferenceTypeSignature*
-
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*BaseType*
+&emsp;&emsp;&emsp;&emsp;*JavaTypeSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ReferenceTypeSignature*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*BaseType*<br/>
 
 <sub>&emsp;&emsp;&emsp;&emsp;为了方便参考，我们把§4.3.2节的产生式搬过来了：</sub>
 
-<sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<i>BaseType:</i></sub>
-
-<sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<i>(one of)</i></sub>
-
+<sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<i>BaseType:</i></sub><br/>
+<sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<i>(one of)</i></sub><br/>
 <sub>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<code>B C D F I J S Z</code></sub>
 
 - 一个*引用类型签名*代表一个Java语言中的引用类型，也就是一个类或一个接口、类型变量或一个数组类型。
@@ -1935,3 +1931,58 @@ Signature_attribute {
 &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*<br/>
 &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*TypeVariableSignature*<br/>
 &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ArrayTypeSignature*
+
+&emsp;&emsp;&emsp;&emsp;*ClassTypeSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`L` *[PackageSpecifier]*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;*SimpleClassTypeSignature {ClassTypeSignatureSuffix} ;*
+
+&emsp;&emsp;&emsp;&emsp;*PackageSpecifier:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*Identifier / {PackageSpecifier}*
+
+&emsp;&emsp;&emsp;&emsp;*SimpleClassTypeSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*Identifier [TypeArguments]*
+
+&emsp;&emsp;&emsp;&emsp;*TypeArguments:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`<` *TypeArgument {TypeArgument}* `>`
+
+&emsp;&emsp;&emsp;&emsp;*TypeArgument:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*[WildcardIndicator] ReferenceTypeSignature*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`*`
+
+&emsp;&emsp;&emsp;&emsp;*WildcardIndicator:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`+`<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`-`
+
+&emsp;&emsp;&emsp;&emsp;*ClassTypeSignatureSuffix:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`.` *SimpleClassTypeSignature*
+
+&emsp;&emsp;&emsp;&emsp;*TypeVariableSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`T` *Identifier ;*
+
+&emsp;&emsp;&emsp;&emsp;*ArrayTypeSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`[` *JavaTypeSignature*
+
+一个*类签名*编码了一个（可能是泛型的）类或接口声明的类型信息。它描述了类或接口中的所有类型参数，并且列出了它的（可能是参数化的）直接父类和直接父接口，如果有的话。一个类型参数是用它的名字加类边界或接口边界进行描述的。
+
+&emsp;&emsp;&emsp;&emsp;*ClassSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*[TypeParameters] SuperclassSignature {SuperinterfaceSignature}*
+
+&emsp;&emsp;&emsp;&emsp;*TypeParameters:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`<` *TypeParameter {TypeParameter}* `>`
+
+&emsp;&emsp;&emsp;&emsp;*TypeParameter:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*Identifier ClassBound {InterfaceBound}*
+
+&emsp;&emsp;&emsp;&emsp;*ClassBound:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`:` *[ReferenceTypeSignature]*
+
+&emsp;&emsp;&emsp;&emsp;*InterfaceBound:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`:` *ReferenceTypeSignature*
+
+&emsp;&emsp;&emsp;&emsp;*SuperclassSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*
+
+&emsp;&emsp;&emsp;&emsp;*SuperinterfaceSignature:*<br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*
+
+一个*方法签名*编码了（可能是泛型的）方法声明相关的类型信息。它描述了方法的所有类型参数；（可能是参数化的）形参类型；（可能是参数化的）返回类型，如果有的话；以及`throws`声明的所有异常的类型。
