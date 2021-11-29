@@ -2010,3 +2010,35 @@ Signature_attribute {
 &emsp;&emsp;*FieldSignature:*<br/>
 &emsp;&emsp;*ReferenceTypeSignature*
 
+### 4.7.10 SourceFile属性
+
+它是`ClassFile`结构体（§4.1）的`attribtues`表中的一个可选的定长属性。
+
+在一个`ClassFile`结构体的`attributes`表中，最多只能有一个`SourceFile`属性。
+
+格式如下：
+
+```
+SourceFile_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 sourcefile_index;
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应值必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`SourceFile`”。
+
+`attribute_length`
+
+&emsp;&emsp;必须是二。
+
+`sourcefile_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应的记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个字符串。
+
+&emsp;&emsp;<sub>`sourcefile_index`所引用的字符串会被解释为该`class`文件对应源文件的名字。它可不是包含文件的文件夹名或者是该文件的绝对路径名；在真正要用这些文件名的时候，这种平台相关的额外信息必须要由运行时解释器或开发工具提供出来。</sub>
+
