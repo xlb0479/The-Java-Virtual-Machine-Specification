@@ -2168,4 +2168,13 @@ LocalVariableTable_attribute {
 
 &emsp;&emsp;&emsp;&emsp;`start_pc`和`length`属性表示某个局部变量在`code`数组的[`start_pc`, `start_pc + length`)区间内的某个索引位置上有一个值，区间是左闭右开的。
 
-&emsp;&emsp;`name_index`
+&emsp;&emsp;`name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个局部变量的非限定名（§4.2.2）。
+
+&emsp;&emsp;`descriptor_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个字段描述符，该字段描述符编码了源程序中的一个局部变量的类型（§4.2.2）。
+
+&emsp;&emsp;`index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是当前帧的局部变量表中的有效索引。对应索引处有一个局部变量。呦呵，反正话啊，这可是相声的经典表演。
+
+&emsp;&emsp;&emsp;&emsp;如果指定的局部变量类型是`double`和`long`，那它要占用`index`和`index + 1`。
