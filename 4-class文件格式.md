@@ -2042,3 +2042,34 @@ SourceFile_attribute {
 
 &emsp;&emsp;<sub>`sourcefile_index`所引用的字符串会被解释为该`class`文件对应源文件的名字。它可不是包含文件的文件夹名或者是该文件的绝对路径名；在真正要用这些文件名的时候，这种平台相关的额外信息必须要由运行时解释器或开发工具提供出来。</sub>
 
+### 4.7.11 SourceDebugExtension属性
+
+它是`ClassFile`结构体（§4.1）的`attributes`表中的一个可选属性。
+
+在一个`ClassFile`结构体的`attributes`表中，最多只能有一个`SourceDebugExtension`属性。
+
+格式如下：
+
+```
+SourceDebugExtension_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u1 debug_extension[attribute_length];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`SourceDebugExtension`”。
+
+`attribute_length`
+
+&emsp;&emsp;代表属性的长度，不包括开头的六个字节。
+
+`debug_extension[]`
+
+&emsp;&emsp;保存了扩展的调试信息，这些信息对JVM来说没有语义上的影响。这些信息通过修正的UTF-8字符串（§4.4.7）来表达，结尾不带零字节。
+
+&emsp;&emsp;<sub>注意，它代表的字符串长度可能超出了一个`String`类实例所能表达的长度。</sub>
