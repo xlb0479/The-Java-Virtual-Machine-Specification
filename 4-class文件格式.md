@@ -1964,25 +1964,49 @@ Signature_attribute {
 
 一个*类签名*编码了一个（可能是泛型的）类或接口声明的类型信息。它描述了类或接口中的所有类型参数，并且列出了它的（可能是参数化的）直接父类和直接父接口，如果有的话。一个类型参数是用它的名字加类边界或接口边界进行描述的。
 
-&emsp;&emsp;&emsp;&emsp;*ClassSignature:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*[TypeParameters] SuperclassSignature {SuperinterfaceSignature}*
+&emsp;&emsp;*ClassSignature:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*[TypeParameters] SuperclassSignature {SuperinterfaceSignature}*
 
-&emsp;&emsp;&emsp;&emsp;*TypeParameters:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`<` *TypeParameter {TypeParameter}* `>`
+&emsp;&emsp;*TypeParameters:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;`<` *TypeParameter {TypeParameter}* `>`
 
-&emsp;&emsp;&emsp;&emsp;*TypeParameter:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*Identifier ClassBound {InterfaceBound}*
+&emsp;&emsp;*TypeParameter:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*Identifier ClassBound {InterfaceBound}*
 
-&emsp;&emsp;&emsp;&emsp;*ClassBound:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`:` *[ReferenceTypeSignature]*
+&emsp;&emsp;*ClassBound:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;`:` *[ReferenceTypeSignature]*
 
-&emsp;&emsp;&emsp;&emsp;*InterfaceBound:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;`:` *ReferenceTypeSignature*
+&emsp;&emsp;*InterfaceBound:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;`:` *ReferenceTypeSignature*
 
-&emsp;&emsp;&emsp;&emsp;*SuperclassSignature:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*
+&emsp;&emsp;*SuperclassSignature:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*
 
-&emsp;&emsp;&emsp;&emsp;*SuperinterfaceSignature:*<br/>
-&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*
+&emsp;&emsp;*SuperinterfaceSignature:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*ClassTypeSignature*
 
 一个*方法签名*编码了（可能是泛型的）方法声明相关的类型信息。它描述了方法的所有类型参数；（可能是参数化的）形参类型；（可能是参数化的）返回类型，如果有的话；以及`throws`声明的所有异常的类型。
+
+&emsp;&emsp;*MethodSignature:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*[TypeParameters] ( {JavaTypeSignature} ) Result {ThrowsSignature}*
+
+&emsp;&emsp;*Result:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*JavaTypeSignature*<br/>
+&emsp;&emsp;&nbsp;&nbsp;*VoidDescriptor*
+
+&emsp;&emsp;*ThrowsSignature:*<br/>
+&emsp;&emsp;&nbsp;&nbsp;^ *ClassTypeSignature*<br/>
+&emsp;&emsp;&nbsp;&nbsp;^ *TypeVariableSignature*
+
+&emsp;&emsp;<sub>下面是§4.3.3节的产生式拿过来看着方便一些：</sub><br/>
+
+&emsp;&emsp;&emsp;&emsp;<sub>*VoidDescriptor:*</sub><br/>
+&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;<sub>`V`</sub>
+
+&emsp;&emsp;<sub>用`Signature`编码的方法签名可能没法跟`method_info`结构体（§4.3.3）中的方法描述符准确的对应上。特别是，无法保证方法签名中的形参类型数量和方法描述符中的参数描述符的数量相等。这俩数在大部分方法中都是相等的，但是某些Java语言中的构造器是带隐式声明参数的，编译器会用参数描述符来进行表达，但方法签名中却没有这个东西。§4.7.18中讲的参数注解就有这种情况。</sub>
+
+一个*字段签名*编码了（可能是参数化的）字段类型、形参、局部变量或record成分声明。
+
+&emsp;&emsp;*FieldSignature:*<br/>
+&emsp;&emsp;*ReferenceTypeSignature*
+
