@@ -2098,3 +2098,23 @@ LineNumberTable_attribute {
 解释如下：
 
 `attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应值必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`LineNumberTable`”。
+
+`attribute_length`
+
+&emsp;&emsp;属性的长度，不包含开头的六个字节。
+
+`line_number_table_length`
+
+&emsp;&emsp;代表`line_number_table`表中的记录数量。
+
+`line_number_table[]`
+
+&emsp;&emsp;每条记录表示源码中的行号在`code`数组中某个位置上发生了变化。每个`line_number_table`记录必须包含以下两个属性：
+
+&emsp;&emsp;`start_pc`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`Code`属性的`code`数组中的有效索引。该索引指定的`code`数组的位置表示对应源码中新的一行开始了。
+
+&emsp;&emsp;`line_number`<br/>
+&emsp;&emsp;&emsp;&emsp;给出对应的源码行号。
