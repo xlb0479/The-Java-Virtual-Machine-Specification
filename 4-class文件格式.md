@@ -2073,3 +2073,28 @@ SourceDebugExtension_attribute {
 &emsp;&emsp;保存了扩展的调试信息，这些信息对JVM来说没有语义上的影响。这些信息通过修正的UTF-8字符串（§4.4.7）来表达，结尾不带零字节。
 
 &emsp;&emsp;<sub>注意，它代表的字符串长度可能超出了一个`String`类实例所能表达的长度。</sub>
+
+### 4.7.12 LineNumberTable属性
+
+它是`Code`属性（§4.7.3）的`attributes`表中的一个可选的变长属性。调试器可以用它来判断`code`数组中的某一部分对应源码文件中的行号是多少。
+
+如果`Code`属性的`attributes`表中出现了多个`LineNumberTable`属性，它们的顺序是不固定的。
+
+在一个`Code`属性的`attribtues`表中，*源码文件的每一行*可能对应多个`LineNumberTable`属性。也就是说多个该属性可能才能表达源码文件中的一行，和源码文件不需要一行对一个。
+
+格式如下：
+
+```
+LineNumberTable_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 line_number_table_length;
+    {   u2 start_pc;
+        u2 line_number;
+    } line_number_table[line_number_table_length];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
