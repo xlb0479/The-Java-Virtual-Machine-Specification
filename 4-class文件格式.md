@@ -2118,3 +2118,54 @@ LineNumberTable_attribute {
 
 &emsp;&emsp;`line_number`<br/>
 &emsp;&emsp;&emsp;&emsp;给出对应的源码行号。
+
+### 4.7.13 LocalVariableTable属性
+
+这玩意是`Code`属性（§4.7.3）的`attributes`表的一个可选的变长属性。调试器可以用它在方法执行过程中判断某个局部变量的值。
+
+如果一个`Code`属性的`attributes`表中出现了多个`LocalVariableTable`属性，它们的顺序是不固定的。
+
+在一个`Code`属性的`attributes`表中，*每个局部变量*最多只能有一个*LocalVariableTable*属性。
+
+格式如下：
+
+```
+LocalVariableTable_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 local_variable_table_length;
+    {   u2 start_pc;
+        u2 length;
+        u2 name_index;
+        u2 descriptor_index;
+        u2 index;
+    } local_variable_table[local_variable_table_length];
+}
+```
+
+解释如下：
+
+`attribute_name_index`
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`LocalVariableTable`”。
+
+`attribute_length`
+
+&emsp;&emsp;表示该属性的长度，不包括开头的六个字节。
+
+`local_variable_table_length`
+
+&emsp;&emsp;表示`local_variable_table`数组的长度。
+
+`local_variable_table[]`
+
+&emsp;&emsp;表中每个记录代表一个`code`数组的偏移量范围，该范围对应了某个局部变量的值，还代表该局部变量在当前帧的局部变量数组中的索引位置。表中的每个记录必须包含以下五个属性：
+
+&emsp;&emsp;`start_pc`、`length`<br/>
+&emsp;&emsp;&emsp;&emsp;`start_pc`的值必须是该`Code`属性的`code`数组的一个有效索引，而且必须是一条指令的操作码索引。
+
+&emsp;&emsp;&emsp;&emsp;`start_pc + length`的值必须要么是该`Code`属性的`code`数组的有效索引，要么是一条指令的操作码索引，再要么必须是超出`code`数组末尾的第一个索引。
+
+&emsp;&emsp;&emsp;&emsp;`start_pc`和`length`属性表示某个局部变量在`code`数组的[`start_pc`, `start_pc + length`)区间内的某个索引位置上有一个值，区间是左闭右开的。
+
+&emsp;&emsp;`name_index`
