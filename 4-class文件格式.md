@@ -2388,7 +2388,7 @@ element_value {
 
 &emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表一个返回描述符（§4.3.3）。这个返回描述符给出了该`element_value`结构体表达的类字面量的类型。类型和类字面量对应方式如下：
 
-&emsp;&emsp;<ul>
+<ul>
 <li>对于一个类字面量<code><i>C</i>.class</code>，<i>C</i>是一个类、接口、或数组类型的名字，此时对应的类型就是<i>C</i>。在<code>constant_pool</code>中的返回描述符则是<i>ObjectType</i>或<i>ArrayType</i>。</li>
 <li>对于一个类字面量<code><i>p</i>.class</code>，<i>p</i>是一个基本类型的名字，此时对应的类型就是<i>p</i>。在<code>constant_pool</code>中的返回描述符则是一个<i>BaseType</i>字符。</li>
 <li>对于一个类字面量<code>void.class</code>，对应的类型就是<code>void</code>。在<code>constant_pool</code>中的返回描述符则是<i>V</i></li>
