@@ -2300,3 +2300,23 @@ RuntimeVisibleAnnotations_attribute {
         } element_value_pairs[num_element_value_pairs];
     }
 ```
+
+&emsp;&emsp;解释如下：
+
+&emsp;&emsp;`type_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表一个字段描述符（§4.3.2）。该字段描述符指明了这个`annotation`结构体所表达的注解的类型。
+
+&emsp;&emsp;`num_element_value_pairs`<br/>
+&emsp;&emsp;&emsp;&emsp;给出了该`annotation`结构体所表达的注解中的元素键值对的个数。
+
+&emsp;&emsp;`element_value_pairs[]`<br/>
+&emsp;&emsp;&emsp;&emsp;其中的每个值代表该`annotation`结构体所表达的注解中的一个元素键值对。每个记录包含以下两个属性：
+
+&emsp;&emsp;&emsp;&emsp;`element_name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7）。给出了当前元素键值对的名字，也就是键。
+
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<sub>给出了名字，其实也就是给出了元素</sub>
+
+&emsp;&emsp;&emsp;&emsp;`value`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;该记录所表达的元素键值对的值。
+
