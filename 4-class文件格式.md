@@ -2320,3 +2320,68 @@ RuntimeVisibleAnnotations_attribute {
 &emsp;&emsp;&emsp;&emsp;`value`<br/>
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;该记录所表达的元素键值对的值。
 
+#### 4.7.16.1 element_value结构
+
+它是一个可区分共用体，代表一个元素键值对的值。格式如下：
+
+```
+element_value {
+    u1 tag;
+    union {
+        u2 const_value_index;
+        
+        {   u2 type_name_index;
+            u2 const_name_index;
+        } enum_const_value;
+
+        u2 class_info_index;
+
+        annotation annotation_value;
+        
+        {   u2 num_values;
+            element_value values[num_values];
+        } array_value;
+    } value;
+}
+```
+
+`tag`是一个ASCII字符，代表这个值的类型。它决定了`value`共用体中要使用哪个元素。表4.7.16.1-A给出了`tag`的有效值，以及每个值代表的类型，以及对应生效的共用体中的元素。表中第四列是共用体中某个属性生效的时候才用到，下面会讲。
+
+**表4.7.16.1-A `tag`值的解释**
+
+|`tag`**值**|**类型**|`value`**项**|**常量类型**
+|-|-|-|-
+|`B`|`byte`|`const_value_index`|`CONSTANT_Integer`
+|`C`|`char`|`const_value_index`|`CONSTANT_Integer`
+|`D`|`double`|`const_value_index`|`CONSTANT_Double`
+|`F`|`float`|`const_value_index`|`CONSTANT_Float`
+|`I`|`int`|`const_value_index`|`CONSTANT_Integer`
+|`J`|`long`|`const_value_index`|`CONSTANT_Long`
+|`S`|`short`|`const_value_index`|`CONSTANT_Integer`
+|`Z`|`boolean`|`const_value_index`|`CONSTANT_Integer`
+|`s`|`String`|`const_value_index`|`CONSTANT_Utf8`
+|`e`|枚举类|`enum_const_value`|*不适用*
+|`c`|`Class`|`class_info_index`|*不适用*
+|`@`|注解接口|`annotation_value`|*不适用*
+|`[`|数组类型|`array_value`|*不适用*
+
+*value*项代表元素键值对的值。它是一个共用体，解释如下：
+
+`constant_value_index`<br/>
+&emsp;&emsp;代表一个基本类型或`String`类型的常量，作为元素键值对的值。
+
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录的类型必须适用于`tag`所表达的类型，也就是表的第四列。
+
+`enum_const_value`<br/>
+&emsp;&emsp;说明这个元素键值对的值是一个枚举常量。
+
+&emsp;&emsp;由两个属性组成：
+
+&emsp;&emsp;`type_name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表一个字段描述符（§4.3.2）。`constant_pool`表的对应记录给出了这个`element_value`结构体表达的枚举常量类型的二进制名的内部形式（§4.2.1）。
+
+&emsp;&emsp;`constant_name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7）。`constant_pool`表的对应记录给出了这个`element_value`结构体表达的枚举常量的一般名称。
+
+`class_info_index`<br/>
+&emsp;&emsp;该属性表示这个元素键值对的值是一个类字面量。
