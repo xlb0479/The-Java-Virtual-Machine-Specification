@@ -2259,3 +2259,44 @@ Deprecated_attribute {
 
 `attribute_length`<br/>
 &emsp;&emsp;必须是零。
+
+### 4.7.16 RuntimeVisbleAnnotations属性
+
+它是`ClassFile`、`field_info`、`method_info`、或`record_component_info`结构体（§4.1, §4.5, §4.6, §4.7.30）的`attributes`表中的一个变长属性。该属性可以保存类、字段、方法或record成分声明上的那些运行时可见的注解。
+
+在一个`ClassFile`、`field_info`、`method_info`或`record_component_info`结构体的`attributes`表中，最多只能有一个`RuntimeVisibleAnnotations`属性。
+
+格式如下：
+
+```
+RuntimeVisibleAnnotations_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_annotations;
+    annotation annotations[num_annotations];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`RuntimeVisbleAnnotations`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;代表属性的长度，不包括开头的六个字节。
+
+`num_annotations`<br/>
+&emsp;&emsp;给出了该结构体表达的运行时可见注解的数量。
+
+`annotations[]`<br/>
+&emsp;&emsp;表中的每条记录代表某个声明上的一个运行时可见注解。`annotation`结构体的格式如下：
+
+```
+    annotation {
+        u2 type_index;
+        u2 num_element_value_pairs;
+        {   u2 element_name_index;
+            element_value value;
+        } element_value_pairs[num_element_value_pairs];
+    }
+```
