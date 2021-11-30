@@ -2178,3 +2178,61 @@ LocalVariableTable_attribute {
 &emsp;&emsp;&emsp;&emsp;必须是当前帧的局部变量表中的有效索引。对应索引处有一个局部变量。呦呵，反正话啊，这可是相声的经典表演。
 
 &emsp;&emsp;&emsp;&emsp;如果指定的局部变量类型是`double`和`long`，那它要占用`index`和`index + 1`。
+
+### 4.7.14 LocalVariableTypeTable属性
+
+该属性是`Code`属性（§4.7.3）的`attributes`表中的一个可选的变长属性。调试器可以在方法执行过程中使用该属性来判断局部变量的值。
+
+如果在`Code`属性的`attributes`表中出现了多个`LocalVariableTypeTable`属性，它们的顺序是不固定的。
+
+在一个`Code`属性的`attributes`表中，*每个局部变量*不能有多个`LocalVariableTypeTable`属性。
+
+&emsp;&emsp;<sub>`LocalVariableTypeTable`跟`LocalVariableTable`（§4.7.13）不一样，它给的是签名信息而非描述符信息。这种不同只对于那些使用了类型变量或参数化类型的变量才显得比较重要。这种变量可能在这俩表中都会出现，而其它变量只会出现在`LocalVariableTable`中。</sub>
+
+格式如下：
+
+```
+LocalVariableTypeTable_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 local_variable_type_table_length;
+    {   u2 start_pc;
+        u2 length;
+        u2 name_index;
+        u2 signature_index;
+        u2 index;
+    } local_variable_type_table[local_variable_type_table_length];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`LocalVariableTypeTable`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;代表属性的长度，不包括开头的六个字节。
+
+`local_variable_type_table_length`<br/>
+&emsp;&emsp;代表`local_variable_type_table`数组中记录的数量。
+
+`local_variable_type_table[]`<br/>
+&emsp;&emsp;该数组中的每条记录代表一个`code`数组中的偏移量区间，该区间对应一个局部变量的值，还代表该局部变量在当前帧的局部变量数组中的索引位置。表中的每个记录必须包含以下五个属性：
+
+&emsp;&emsp;`start_pc`、`length`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是该`Code`属性的`attributes`表的有效索引，而且必须是一个指令操作码的索引。
+
+&emsp;&emsp;&emsp;&emsp;`start_pc + length`的值必须要么是该`Code`属性的`code`数组的有效索引，要么是一条指令的操作码索引，再要么必须是超出`code`数组末尾的第一个索引。
+
+&emsp;&emsp;&emsp;&emsp;`start_pc`和`length`属性表示某个局部变量在`code`数组的[`start_pc`, `start_pc + length`)区间内的某个索引位置上有一个值，区间是左闭右开的。
+
+&emsp;&emsp;`name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个局部变量的非限定名（§4.2.2）。
+
+&emsp;&emsp;`signature_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个字段签名，该字段签名编码了源程序中的一个局部变量的类型（§4.7.9.1）。
+
+&emsp;&emsp;`index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是当前帧的局部变量表中的有效索引。对应索引处有一个局部变量。呦呵，反正话啊，这可是相声的经典表演。
+
+&emsp;&emsp;&emsp;&emsp;如果指定的局部变量类型是`double`和`long`，那它要占用`index`和`index + 1`。
