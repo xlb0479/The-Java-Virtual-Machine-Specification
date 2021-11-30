@@ -2236,3 +2236,26 @@ LocalVariableTypeTable_attribute {
 &emsp;&emsp;&emsp;&emsp;必须是当前帧的局部变量表中的有效索引。对应索引处有一个局部变量。呦呵，反正话啊，这可是相声的经典表演。
 
 &emsp;&emsp;&emsp;&emsp;如果指定的局部变量类型是`double`和`long`，那它要占用`index`和`index + 1`。
+
+### 4.7.15 Deprecated属性
+
+它是`ClassFile`、`field_info`、`method_info`结构体（§4.1, §4.5, §4.6）的`attributes`表中的一个可选的定长属性。如果一个类、接口、方法或字段用`Deprecated`属性做了标记，说明这个类、接口、方法或字段已经废了。
+
+能够读取`class`文件格式的运行时解释器或其他工具，比如一个编译器吧，可以使用这个标记告诉用户他引用了一个废弃的类、接口、方法或字段。`Deprecated`属性的出现不会对类或接口产生语义上的影响。
+
+格式如下：
+
+```
+Deprecated_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`Deprecated`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;必须是零。
