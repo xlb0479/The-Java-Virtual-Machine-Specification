@@ -2395,3 +2395,21 @@ element_value {
 </ul>
 
 &emsp;&emsp;<sub>比如`Object.class`类字面量对应的类型就是`Object`，对应的`constant_pool`记录是`Ljava/lang/Object;`，而`int.class`类字面量对应的是类型`int`，`constant_pool`记录是`I`。</sub>
+
+&emsp;&emsp;<sub>类字面量`void.class`对应`void`，`constant_pool`记录是*V*，然而`Void.class`类字面量对应类型`Void`，所以`constant_pool`记录是`Ljava/lang/Void;`。</sub>
+
+`annotation_value`<br/>
+&emsp;&emsp;表示这个元素键值对的值是一个“嵌套的”注解。
+
+&emsp;&emsp;它的值是一个`annotation`结构体（§4.7.16），给出这个`element_value`结构体所表达的注解。
+
+`array_value`<br/>
+&emsp;&emsp;表示这个元素键值对的值是一个数组。
+
+&emsp;&emsp;包含以下两个属性：
+
+&emsp;&emsp;`num_values`<br/>
+&emsp;&emsp;&emsp;&emsp;表示该`element_value`结构体表达的数组中的元素个数。
+
+&emsp;&emsp;`values[]`<br/>
+&emsp;&emsp;&emsp;&emsp;`values`表中的每个值给出了该`element_value`结构体所表达的数组中对应的元素。
