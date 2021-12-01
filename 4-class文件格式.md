@@ -2487,3 +2487,7 @@ RuntimeVisibleParameterAnnotations_attribute {
 
 &emsp;&emsp;`annotations[]`<br/>
 &emsp;&emsp;&emsp;&emsp;表中的每条记录代表对应形参声明上的一个运行时可见的注解。`annotation`结构体见§4.7.16。
+
+&emsp;&emsp;表中的第*i*条记录可以但并不强制跟方法描述符（§4.3.3）中的第*i*个参数描述符对应。
+
+&emsp;&emsp;<sub>比如，编译器可能只会为那些用来表达在源码中显式声明的参数的参数描述符创建该表对应的记录。在Java语言中，一个内部类的构造器要求在显式声明的参数之前要有一个隐式声明的参数（JLS §8.8.1），这样，在`class`文件中对应的`<init>`方法在所有显式声明参数的参数描述符之前会有一个参数描述符用来表达这个隐式声明的参数。如果第一个显式声明的参数在源码中加了注解，那么编译器可能用`parameter_annotations[0]`来保存*第二个*参数描述符对应的注解。</sub>
