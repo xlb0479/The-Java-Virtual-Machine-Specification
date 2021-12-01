@@ -2413,3 +2413,36 @@ element_value {
 
 &emsp;&emsp;`values[]`<br/>
 &emsp;&emsp;&emsp;&emsp;`values`表中的每个值给出了该`element_value`结构体所表达的数组中对应的元素。
+
+### 4.7.17 RuntimeInvisibleAnnotations属性
+
+它是`ClassFile`、`field_info`、`method_info`或`record_component_info`结构体（§4.1, §4.5, §4.6, §4.7.30）的`attributes`表中的一个变长属性。该属性保存了类、方法、字段或record成分声明上的运行时不可见的注解。
+
+在一个`ClassFile`、`field_info`、`method_info`、或`record_component_info`结构体的`attributes`表中最多只能有一个`RuntimeInvisibleAnnotations`属性。
+
+&emsp;&emsp;<sub>该属性跟`RuntimeVisibleAnnotations`属性（§4.7.16）类似，只不过该属性表达的注解不能通过反射API返回，除非JVM实现时通过某种特定的机制把这些注解保留下来了，比如某种命令行选项。如果没有此类指令的话，JVM要忽略这个属性。</sub>
+
+格式如下：
+
+```
+RuntimeInvisibleAnnotations_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_annotations;
+    annotation annotations[num_annotations];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`RuntimeInvisibleAnnotations`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`num_annotations`<br/>
+&emsp;&emsp;该结构体所表达的运行时不可见注解的数量。
+
+`annotations[]`<br/>
+&emsp;&emsp;表中每条记录都是某个声明上的一个运行时不可见注解。`annotation`结构体见§4.7.16。
