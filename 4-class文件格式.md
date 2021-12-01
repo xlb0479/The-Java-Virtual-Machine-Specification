@@ -2536,3 +2536,136 @@ RuntimeInvisibleParameterAnnotations_attribute {
 &emsp;&emsp;表中的第*i*条记录可以但并不强制跟方法描述符（§4.3.3）中的第*i*个参数描述符对应。
 
 &emsp;&emsp;<sub>§4.7.18节中给出了一个例子，其中`parameter_annotations[0]`和方法描述符中的第一个参数描述符就不是对应的。</sub>
+
+### 4.7.20 RuntimeVisibleTypeAnnotations属性
+
+它是`ClassFile`、`field_info`、`method_info`、`record_component_info`、`Code`结构体（§4.1, §4.5, §4.6, §4.7.30, §4.7.3）的`attributes`表中的一个变长属性。该属性保存了类、字段、方法或record成分声明上的，或对应方法体中某个表达式上的运行时可见的类型注解。该属性还保存了泛型类、接口、方法和构造器的类型参数声明上的运行时可见的注解。
+
+在一个`ClassFile`、`field_info`、`method_info`或`record_component_info`结构体或`Code`属性的`attributes`表中最多只能有一个`RuntimeVisibleTypeAnnotations`属性。
+
+如果声明或表达式中的类型加了注解，只有跟父级的结构体或`attributes`表中的属性对应起来，才会被加入到`attributes`表的`RuntimeVisibleTypeAnnotations`属性中。（很难理解是不是？看下面）。
+
+&emsp;&emsp;<sub>比如类声明时的`implements`语法中所有类型的注解都记录在该类的`ClassFile`结构体的`RuntimeVisibleTypeAnnotations`属性中。但是，某个字段声明的类型注解则是记录在该字段的`field_info`结构体的`RuntimeVisibleTypeAnnotations`属性中。</sub>
+
+格式如下：
+
+```
+RuntimeVisibleTypeAnnotations_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_annotations;
+    type_annotation annotations[num_annotations];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表字符串值“`RuntimeVisibleTypeAnnotations`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`num_annotations`<br/>
+&emsp;&emsp;该结构体所表达的运行时可见的类型注解的数量。
+
+`annotations[]`<br/>
+&emsp;&emsp;表中每条记录都是某个声明或表达式中的一个运行时可见的类型注解。`type_annotation`结构体格式如下：
+
+```
+type_annotation {
+    u1 target_type;
+    union {
+        type_parameter_target;
+        supertype_target;
+        type_parameter_bound_target;
+        empty_target;
+        formal_parameter_target;
+        throws_target;
+        localvar_target;
+        catch_target;
+        offset_target;
+        type_argument_target;
+    } target_info;
+    type_path target_path;
+    u2 type_index;
+    u2 num_element_value_pairs;
+    {   u2 element_name_index;
+        element_value value;
+    } element_value_pairs[num_element_value_pairs];
+}
+```
+
+&emsp;&emsp;头三个属性`target_type`、`target_info`、`target_path`给出了这个被注解类型的准确定位。后三个属性`type_index`、`num_element_value_pairs`、`element_value_pairs[]`给出了注解自身的类型以及元素键值对。
+
+&emsp;&emsp;`type_annotation`结构体解释如下：
+
+&emsp;&emsp;`target_type`<br/>
+&emsp;&emsp;&emsp;&emsp;给出了该注解出现在了哪种目标上。这里的各种目标对应的*类型上下文*是Java语言中声明和表达式中用到的各种类型（JLS §4.11）。
+
+&emsp;&emsp;&emsp;&emsp;`target_type`合法的值见表4.7.20-A和表4.7.20-B。每个值都是一个单字节标记，指明了紧跟着的`target_info`中由哪个属性负责对目标进行详细描述。
+
+&emsp;&emsp;&emsp;&emsp;<sub>表4.7.20-A和表4.7.20-B中列出的目标种类对应了JLS §4.11中的目标上下文。也就是说，`target_type`的0x10-0x17和0x40-0x42对应类型上下文1-10，`target_type`的0x43-0x4B对应类型上下文11-16。</sub>
+
+&emsp;&emsp;&emsp;&emsp;`target_type`属性的值决定了`ClassFile`、`field_info`、`method_info`结构体或`Code`属性中的`RuntimeVisibleTypeAnnotations`属性中是否会出现`type_annotation`结构体。表4.7.20-C中给出了`type_annotaion`的`target_type`值合法时的`RuntimeVisibleTypeAnnotations`属性的位置。
+
+&emsp;&emsp;`target_info`<br/>
+&emsp;&emsp;&emsp;&emsp;这个值准确的给出了一个声明或表达式中的哪个类型被加了注解了。
+
+&emsp;&emsp;&emsp;&emsp;该共用体的属性见§4.7.20.1。
+
+&emsp;&emsp;`target_path`<br/>
+&emsp;&emsp;&emsp;&emsp;准确的指明了`target_info`指定的类型中的哪一部分被注解了。
+
+&emsp;&emsp;&emsp;&emsp;`target_path`结构体格式详见§4.7.20.2。
+
+&emsp;&emsp;`type_index`、`num_element_value_pairs`、`element_value_pairs[]`<br/>
+&emsp;&emsp;&emsp;&emsp;这几个属性在`type_annotation`结构体中的含义跟它们在`annotation`结构体中的含义是一样的（§4.7.16）。
+
+**表4.7.20-A `target_type`释义（第1部分）**
+
+|**值**|**目标种类**|`target_info`**属性**
+|-|-|-
+|0x00|<sub>泛型类或接口的类型参数声明</sub>|`type_parameter_target`
+|0x01|<sub>泛型方法或构造器的类型参数声明</sub>|`type_parameter_target`
+|0x10|<sub>类声明（包括匿名类声明的直接父类或父接口）时的`extends`或`implements`语法中的类型，或接口声明时的`extends`语法中的类型</sub>|`supertype_target`
+|0x11|<sub>泛型类或接口的类型参数绑定声明中的类型</sub>|`type_parameter_bound_target`
+|0x12|<sub>泛型方法或构造器的类型参数绑定声明中的类型</sub>|`type_parameter_bound_target`
+|0x13|<sub>字段或record成分声明中的类型</sub>|`empty_target`
+|0x14|<sub>方法的返回类型，或刚构造完的对象的类型</sub>|`empty_target`
+|0x15|<sub>方法或构造器的接收者类型</sub>|`empty_target`
+|0x16|<sub>方法、构造器或lambda表达式中的形参声明中的类型</sub>|`formal_parameter_target`
+|0x17|<sub>方法或构造器的`throws`语法中的类型</sub>|`throws_target`
+
+**表4.7.20-B `target_type`释义（第2部分）**
+
+|**值**|**目标种类**|`target_info`**属性**
+|-|-|-
+|0x40|<sub>局部变量声明中的类型</sub>|`localvar_target`
+|0x41|<sub>资源变量声明中的类型</sub>|`localvar_target`
+|0x42|<sub>异常参数声明中的类型</sub>|`catch_target`
+|0x43|<sub>*instanceof*表达式中的类型</sub>|`offset_target`
+|0x44|<sub>*new*表达式中的类型</sub>|`offset_target`
+|0x45|<sub>使用*::new*时的方法引用表达式中的类型</sub>|`offset_target`
+|0x46|<sub>使用*::Identifier*时的方法引用表达式中的类型</sub>|`offset_target`
+|0x47|<sub>类型转换表达式中的类型</sub>|`type_argument_target`
+|0x48|<sub>*new*表达式中的泛型构造器或显式调用构造器语句中的类型参数</sub>|`type_argument_target`
+|0x49|<sub>方法调用表达式中的泛型方法的类型参数</sub>|`type_argument_target`
+|0x4A|<sub>使用*::new*的方法引用表达式中的泛型构造器的类型参数</sub>|`type_argument_target`
+|0x4B|<sub>使用*::Idetifier*的方法引用表达式中的泛型方法的类型参数</sub>|`type_argument_target`
+
+**表4.7.20-C `target_type`外层属性的位置**
+
+|**值**|**目标种类**|**位置**
+|-|-|-
+|0x00|<sub>泛型类或接口的类型参数声明</sub>|`ClassFile`
+|0x01|<sub>泛型方法或构造器的类型参数声明</sub>|`method_info`
+|0x10|<sub>类或接口声明的`extends`，或接口声明时的`implements`语法中的类型</sub>|`ClassFile`
+|0x11|<sub>泛型类或接口的类型参数绑定声明中的类型</sub>|`ClassFile`
+|0x12|<sub>泛型方法或构造器的类型参数绑定声明中的类型</sub>|`method_info`
+|0x13|<sub>字段或record成分声明中的类型</sub>|`field_info`、`record_component_info`
+|0x14|<sub>方法或构造器的返回类型</sub>|`method_info`
+|0x15|<sub>方法或构造器的接收者类型</sub>|`method_info`
+|0x16|<sub>方法、构造器或lambda表达式的形参声明中的类型</sub>|`method_info`
+|0x17|<sub>方法或构造器的`throws`语法中的类型</sub>|`method_info`
+|0x40-0x4B|<sub>局部变量声明、资源变量声明、异常参数声明、表达式中的类型</sub>|`Code`
