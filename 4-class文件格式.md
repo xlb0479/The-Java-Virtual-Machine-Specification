@@ -2446,3 +2446,44 @@ RuntimeInvisibleAnnotations_attribute {
 
 `annotations[]`<br/>
 &emsp;&emsp;表中每条记录都是某个声明上的一个运行时不可见注解。`annotation`结构体见§4.7.16。
+
+### 4.7.18 RuntimeVisibleParameterAnnotations属性
+
+它是`method_info`结构体（§4.6）的`attributes`表中的一个变长属性。该属性保存了对应方法的形参声明上的运行时可见的注解。
+
+在一个`method_info`结构体的`attributes`表中最多只能有一个`RuntimeVisibleParameterAnnotations`属性。
+
+格式如下：
+
+```
+RuntimeVisibleParameterAnnotations_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u1 num_parameters;
+    {   u2 num_annotations;
+        annotation annotations[num_annotations];
+    } parameter_annotations[num_parameters];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`RuntimeVisibleParameterAnnotations`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`num_parameters`<br/>
+&emsp;&emsp;代表该结构体所表达的运行时可见的参数注解的数量。
+
+&emsp;&emsp;<sub>不保证这个数量跟方法描述符中的参数描述符的数量相等。</sub>
+
+`parameter_annotations[]`<br/>
+表中的每条记录代表一处形参声明上的所有运行时可见的注解。每个记录包含以下两个属性：
+
+&emsp;&emsp;`num_annotations`<br/>
+&emsp;&emsp;&emsp;&emsp;给出该记录包含的对应形参声明上的运行时可见注解的数量。
+
+&emsp;&emsp;`annotations[]`<br/>
+&emsp;&emsp;&emsp;&emsp;表中的每条记录代表对应形参声明上的一个运行时可见的注解。`annotation`结构体见§4.7.16。
