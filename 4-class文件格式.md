@@ -2669,3 +2669,29 @@ type_annotation {
 |0x16|<sub>方法、构造器或lambda表达式的形参声明中的类型</sub>|`method_info`
 |0x17|<sub>方法或构造器的`throws`语法中的类型</sub>|`method_info`
 |0x40-0x4B|<sub>局部变量声明、资源变量声明、异常参数声明、表达式中的类型</sub>|`Code`
+
+#### 4.7.20.1 target_info共用体
+
+该共用体中的属性（除了第一个）准确的指明了一个声明或表达式中的哪个类型被注解了。而第一个属性指明的并非是哪个类型，而是类型参数的哪一出声明被注解了。属性如下：
+
+- `type_parameter_target`属性表示一个泛型类、泛型接口、泛型方法或泛型构造器的第*i*个类型参数声明上出现了一个注解。
+
+```
+type_parameter_target {
+    u1 type_parameter_index;
+}
+```
+
+&emsp;&emsp;`type_parameter_index`的值指明了哪一个类型参数声明有注解。`0`表示第一个类型参数声明。
+
+- `supertype_target`属性说明类或接口声明中的`extends`或`implements`语法中的一个类型上出现了一个注解。
+
+```
+supertype_target {
+    u2 supertype_index;
+}
+```
+
+&emsp;&emsp;如果`supertype_index`等于65535，说明注解出现在了类声明的`extends`语法中的父类上面。
+
+&emsp;&emsp;其他的值则代表外层`ClassFile`结构体的`interfaces`数组的一个索引
