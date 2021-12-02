@@ -2956,3 +2956,37 @@ type_path {
 |`@D`|`4`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
 
 关于属性的内容实在是太琐碎无聊了，我已经翻译的没有感情了，希望赶紧结束属性之旅。
+
+### 4.7.21 RuntimeInvisibleTypeAnnotations属性
+
+它是`ClassFile`、`field_info`、`method_info`、`record_component_info`结构体，或`Code`属性（§4.1, §4.5, §4.6, §4.7.30, §4.7.3）的`attributes`表中的一个变长属性。该属性保存了类、字段、方法或record成分声明上的，或对应方法体中某个表达式上的运行时不可见的类型注解。该属性还保存了泛型类、接口、方法和构造器的类型参数声明上的运行时不可见的注解。
+
+在一个`ClassFile`、`field_info`、`method_info`或`record_component_info`结构体或`Code`属性的`attributes`表中最多只能有一个`RuntimeInvisibleTypeAnnotations`属性。
+
+如果声明或表达式中的类型加了注解，只有跟父级的结构体或`attributes`表中的属性对应起来，才会被加入到`attributes`表的`RuntimeInvisibleTypeAnnotations`属性中。（很难理解是不是？别管了）。
+
+格式如下：
+
+```
+RuntimeInvisibleTypeAnnotations_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_annotations;
+    type_annotation annotations[num_annotations];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体，代表字符串值“`RuntimeInvisibleTypeAnnotations`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`num_annotations`<br/>
+&emsp;&emsp;该结构体所表达的运行时不可见的类型注解的数量。
+
+`annotations[]`<br/>
+&emsp;&emsp;表中每条记录都是某个声明或表达式中的一个运行时不可见的类型注解。`type_annotation`结构体见§4.7.20。
+
