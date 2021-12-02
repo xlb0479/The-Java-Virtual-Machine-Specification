@@ -2804,3 +2804,153 @@ type_argument_target {
 &emsp;&emsp;&emsp;&emsp;<sub>类型转换表达式中会出现多个类型是因为可以转换成一个交叉类型。</sub>
 
 &emsp;&emsp;对于显式类型参数列表，`type_argument_index`告诉你哪个类型参数加了注解了。`0`代表第一个类型参数。
+
+#### 4.7.20.2 type_path结构体
+
+声明或表达式中但凡出现了某个类型，`type_path`结构体都可以标识出哪部分被加了注解了。注解可能直接出现在类型上，但如果类型是一个引用类型，注解也可能出现在其他地方：
+
+- 如果声明或表达式中使用了数组类型<i>`T[]`</i>，那么注解可能出现在数组类型中的任何组成类型上，包括元素类型。
+- 如果声明或表达式中使用了嵌套类型<i>`T1.T2`</i>，注解可能出现在最内侧成员类型的名字上，以及任何可以用类型注解的外侧类型上（JLS §9.7.4）。
+- 如果声明或表达式中使用了参数化类型<i>`T<A>`</i>或<i>`T<? extends A>`</i>或<i>`T<? super A>`</i>，那么注解可能出现在任意类型参数上，或者任意通配类型参数的结合上。
+
+&emsp;&emsp;<sub>比如`String[][]`的不同部分搞上注解：</sub>
+
+```
+@Foo String[][] // 给String类加了注解
+String @Foo [][] // 给String[][]数组类加了注解
+String[] @Foo [] // 给String[]数组类加了注解
+```
+
+&emsp;&emsp;<sub>或者是嵌套类型`Outer.Middle.Inner`的不同部分：</sub>
+
+```
+@Foo Outer.Middle.Inner
+Outer.@Foo Middle.Inner
+Outer.Middle.@Foo Inner
+```
+
+&emsp;&emsp;<sub>又或者是参数化类型`Map<String,Object>`或`List<...>`的不同部分搞了注解：</sub>
+
+```
+@Foo Map<String,Object>
+Map<@Foo String,Object>
+Map<String,@Foo Object>
+List<@Foo ? extends String>
+List<? extends @Foo String>
+```
+
+`type_path`结构体的格式如下：
+
+```
+type_path {
+    u1 path_length;
+    {   u1 type_path_kind;
+        u1 type_argument_index;
+    } path[path_length];
+}
+```
+
+`path_length`的值代表`path`数组中元素的个数：
+
+- 如果等于`0`，而且被注解的类型是一个嵌套类型，那么注解是出现在最外侧的能允许加注解的部分上。
+- 如果等于`0`，而且被注解的类型不是嵌套类型，那么该注解直接就出现在该类型上。
+- 如果非零，则`path`数组中的每条记录代表数组类型、嵌套类型、参数化类型中的一个迭代式的、自左向右递进的注解位置。（在数组类型中，就是迭代式访问数组类型本身，然后是它的组成类型，然后是组成类型的组成类型，一步一步递进，直到到达元素类型。）每个记录包含以下两个属性：
+
+&emsp;&emsp;`type_path_kind`<br/>
+&emsp;&emsp;&emsp;&emsp;合法值见表4.7.20.2-A。
+
+**表4.7.20.2-A `type_path_kind`释义**
+
+|**值**|**解释**
+|-|-
+|`0`|注解在数组类型更深的地方
+|`1`|注解在嵌套类型更深的地方
+|`2`|注解在参数化类型的通配类型参数的结合处
+|`3`|注解在参数化类型的类型参数上
+
+&emsp;&emsp;`type_argument_index`<br/>
+&emsp;&emsp;&emsp;&emsp;如果`type_path_kind`的值是`0`、`1`、`2`，则`type_argument_index`的值是`0`。
+
+&emsp;&emsp;&emsp;&emsp;如果`type_path_kind`的值是`3`，那么`type_argument_index`的值就会告诉你参数化类型中的哪个类型参数加了注解了，`0`代表参数化类型中的第一个类型参数。
+
+**表4.7.20.2-B `@A Map<@B ? extends @C String, @D List<@E Object>>`的`type_path`结构体**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@A`|`0`|`[]`
+|`@B`|`1`|`[{type_path_kind: 3; type_argument_index: 0}]`
+|`@C`|`2`|`[{type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 2; type_argument_index: 0}]`
+|`@D`|`1`|`[{type_path_kind: 3; type_argument_index: 1}]`
+|`@E`|`2`|`[{type_path_kind: 3; type_argument_index: 1}, {type_path_kind: 3; type_argument_index: 0}]`
+
+**表4.7.20.2-C `@I String @F [] @G [] @H []`的`type_path`结构体**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@F`|`0`|`[]`
+|`@G`|`1`|`[{type_path_kind: 0; type_argument_index: 0}]`
+|`@H`|`2`|`[{type_path_kind: 0; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
+|`@I`|`3`|`[{type_path_kind: 0; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
+
+**表4.7.20.2-D `@A List<@B Comparable<@F Object @C [] @D [] @E []>>`的`type_path`结构体**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@A`|`0`|`[]`
+|`@B`|`1`|`[{type_path_kind: 3; type_argument_index: 0}]`
+|`@C`|`2`|`[{type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}]`
+|`@D`|`3`|`[{type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
+|`@E`|`4`|`[{type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
+|`@F`|`5`|`[{type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
+
+**表4.7.20.2-E `@A Outer . @B Middle . @C Inner`的`type_path`结构体**<br/>
+**假设：  class Outer {<br/>
+&emsp;&emsp;&emsp;&emsp;class Middle {<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;class Inner {}<br/>
+&emsp;&emsp;&emsp;&emsp;}<br/>
+&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;}**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@A`|`0`|`[]`
+|`@B`|`1`|`[{type_path_kind: 1; type_argument_index: 0}]`
+|`@C`|`2`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}]`
+
+**表4.7.20.2-F `Outer . @A MiddleStatic . @B Inner`的`type_path`结构体**<br/>
+**假设：  class Outer {<br/>
+&emsp;&emsp;&emsp;&emsp;static class MiddleStatic {<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;class Inner {}<br/>
+&emsp;&emsp;&emsp;&emsp;}<br/>
+&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;}**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@A`|`0`|`[]`
+|`@B`|`1`|`[{type_path_kind: 1; type_argument_index: 0}]
+|||在`Outer . MiddleStatic . Inner`类型中，不能在`Outer`名字上加注解，因为它右侧的类名`MiddleStatic`并不代表`Outer`的一个内部类。
+
+**表4.7.20.2-G `Outer . MiddleStatic . @A InnerStatic`的`type_path`结构体**<br/>
+**假设：  class Outer {<br/>
+&emsp;&emsp;&emsp;&emsp;static class MiddleStatic {<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;static class InnerStatic {}<br/>
+&emsp;&emsp;&emsp;&emsp;}<br/>
+&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;}**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@A`|`0`|`[]`
+|||在`Outer . MiddleStatic . InnerStatic`类型中，不能在`Outer`名字上加注解，因为它右侧的类名`MiddleStatic`并不代表`Outer`的一个内部类。同样，`MiddleStatic`名字上也不能加注解，因为它右侧的`InnerStatic`也不代表`MiddleStatic`的一个内部类。
+
+**表4.7.20.2-H `Outer . Middle<@A Foo . @B Bar> . Inner<@D String @C []>`的`type_path`结构体**<br/>
+**假设：  class Outer {<br/>
+&emsp;&emsp;&emsp;&emsp;class Middle&lt;T&gt; {<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;class Inner&lt;U&gt; {}<br/>
+&emsp;&emsp;&emsp;&emsp;}<br/>
+&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;}**
+
+|**注解**|`path_length`|`path`
+|-|-|-
+|`@A`|`2`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}]`
+|`@B`|`3`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}]`
+|`@C`|`3`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}]`
+|`@D`|`4`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
