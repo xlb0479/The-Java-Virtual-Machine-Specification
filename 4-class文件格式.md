@@ -2759,3 +2759,48 @@ localvar_target {
 
 &emsp;&emsp;`index`<br/>
 &emsp;&emsp;&emsp;&emsp;指定局部变量必须在当前帧的局部变量数组的`index`处。
+
+&emsp;&emsp;&emsp;&emsp;如果`index`处的局部变量是`double`或者`long`类型的，那它要占用`index`和`index + 1`两个位置。
+
+&emsp;&emsp;&emsp;&emsp;<sub>必须得拿一个表把加了注解的局部变量完全的说清楚才行，因为一个局部变量可能在多个活动的区间内通过不同的局部变量索引进行表达。每条记录中的`start_pc`、`length`、`index`都是在表达作为`LocalVariableTable`属性的信息。</sub>
+
+&emsp;&emsp;&emsp;&emsp;<sub>`localvar_target`记录了某个局部变量的类型被加了注解了，但是并不记录类型本身。类型信息可以去相关的`LocalVariableTable`属性中找。</sub>
+
+- `catch_target`属性告诉你一个异常参数声明的第*i*个类型上有个注解。
+
+```
+catch_target {
+    u2 exception_table_index;
+}
+```
+
+&emsp;&emsp;这个值是一个索引，啥索引呢，是`RuntimeVisibleTypeAnnotations`属性外层的`Code`属性的`exception_table`数组的一个索引。
+
+&emsp;&emsp;&emsp;&emsp;<sub>之所以一个异常参数声明中会出现多个类型，是因为有带多个`catch`块的`try`语句，而且异常参数的类型是一个类型共用体（JLS §14.20）。编译器通常会为共用体中的每个类型创建一个`exception_table`的记录，`catch_target`可以用它来进行区分。这种方式保留了类型和其注解的关联性。</sub>
+
+- `offset_target`告诉你*instanceof*或*new*表达式中的类型上有个注解，或者是方法引用表达式的`::`前面的类型上有个注解。
+
+```
+offset_target {
+    u2 offset;
+}
+```
+
+&emsp;&emsp;这个`offset`值指的是`code`数组中的偏移量，可能是对应*instanceof*表达式的字节码指令，也可能是对应*new*表达式的*new*字节码指令，还可能是对应方法引用表达式的字节码指令。
+
+- `type_argument_target`属性告诉你类型转换表达式的第*i*个类型上有个注解，或者是以下场景中的显式类型参数列表的第*i*个类型参数上：*new*表达式、显式构造器调用语句、方法调用表达式、方法引用表达式。
+
+```
+type_argument_target {
+    u2 offset;
+    u1 type_argument_index;
+}
+```
+
+&emsp;&emsp;`offset`给的是`code`数组中的偏移量，可能是类型转换表达式对应的字节码指令，或者是*new*表达式对应的*new*字节码指令，或者是显式构造器调用语句对应的字节码指令，或者是方法调用表达式对应的字节码指令，或者是方法引用表达式对应的字节码指令。
+
+&emsp;&emsp;对于类型转换表达式，`type_argument_index`的值给出了类型转换操作符中的哪个类型加了注解。`0`表示第一个（或唯一的）类型。
+
+&emsp;&emsp;&emsp;&emsp;<sub>类型转换表达式中会出现多个类型是因为可以转换成一个交叉类型。</sub>
+
+&emsp;&emsp;对于显式类型参数列表，`type_argument_index`告诉你哪个类型参数加了注解了。`0`代表第一个类型参数。
