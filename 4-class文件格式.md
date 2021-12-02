@@ -2990,3 +2990,30 @@ RuntimeInvisibleTypeAnnotations_attribute {
 `annotations[]`<br/>
 &emsp;&emsp;表中每条记录都是某个声明或表达式中的一个运行时不可见的类型注解。`type_annotation`结构体见§4.7.20。
 
+### 4.7.22 AnnotationDefault属性
+
+它是`method_info`结构体（§4.6）的`attributes`表中的一个变长属性，也就是用来表达注解接口中的元素的（JLS §9.6.1）。该属性保存了`method_info`结构体表达的元素的默认值（JLS §9.6.2）。
+
+在一个`method_info`结构体的`attributes`表中最多只能有一个`AnnotationDefault`属性，代表注解接口的一个元素。
+
+格式如下：
+
+```
+AnnotationDefault_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    element_value default_value;
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`AnnotationDefault`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`default_value`<br/>
+&emsp;&emsp;这个值代表该`AnnotationDefault`属性外层`method_info`结构体表达的注解接口元素的默认值。（绕来绕去讲废话。）
+
