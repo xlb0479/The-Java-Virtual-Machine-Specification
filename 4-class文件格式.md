@@ -2954,3 +2954,5 @@ type_path {
 |`@B`|`3`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}]`
 |`@C`|`3`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}]`
 |`@D`|`4`|`[{type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 1; type_argument_index: 0}, {type_path_kind: 3; type_argument_index: 0}, {type_path_kind: 0; type_argument_index: 0}]`
+
+关于属性的内容实在是太琐碎无聊了，我已经翻译的没有感情了，希望赶紧结束属性之旅。
