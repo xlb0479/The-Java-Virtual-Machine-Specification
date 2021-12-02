@@ -2694,4 +2694,68 @@ supertype_target {
 
 &emsp;&emsp;如果`supertype_index`等于65535，说明注解出现在了类声明的`extends`语法中的父类上面。
 
-&emsp;&emsp;其他的值则代表外层`ClassFile`结构体的`interfaces`数组的一个索引
+&emsp;&emsp;其他的值则代表外层`ClassFile`结构体的`interfaces`数组的一个索引，告诉你这个注解要么是出现在类声明的`implements`语法中的父接口上，要么是出现在接口声明的`extends`语法的父接口上。
+
+- `type_parameter_bound_target`属性是说这个注解出现在一个泛型类、接口、方法或构造器的第*j*个类型参数声明的第*i*个绑定上。
+
+```
+type_parameter_bound_target {
+    u1 type_parameter_index;
+    u1 bound_index;
+}
+```
+
+&emsp;&emsp;`type_parameter_index`元素指的是哪一个类型参数声明上有加了注解的绑定。`0`代表第一个类型参数声明。
+
+&emsp;&emsp;`bound_index`指的是`type_parameter_index`指定的类型参数声明的哪一个绑定带了注解。`0`代表第类型参数声明的第一个绑定。
+
+&emsp;&emsp;&emsp;&emsp;<sub>`type_parameter_bound_target`记录了一个绑定带注解了，但是没有记录该绑定是啥类型组成的。这个类型信息可以去相关的`Signature`属性中的类签名或方法签名中去找。</sub>
+
+&emsp;&emsp;`empty_target`指的是注解要么出现在了字段声明的类型上，要么是出现在record成分声明的类型上，再要么是方法的返回类型上，还要么是新构造的对象的类型上，最后要么是方法或构造器的接收者类型上。各种要么。
+
+```
+empty_target {
+}
+```
+
+&emsp;&emsp;&emsp;&emsp;<sub>每个位置上只能出现一种类型，所以在`target_info`中用不着区分每种类型。</sub>
+
+- `formal_parameter_target`是说注解出现在了方法、构造器或lambda表达式的形参声明的类型上。
+
+```
+formal_parameter_target {
+    u1 formal_parameter_index;
+}
+```
+
+&emsp;&emsp;`formal_parameter_index`的值告诉你哪一个形参声明带类型注解。`formal_parameter_index`的值*i*可能但不强制对应方法描述符（§4.3.3）中的第*i*个参数描述符。
+
+&emsp;&emsp;&emsp;&emsp;<sub>该属性记录了一个形参的类型被加了注解，但并不记录类型本身。类型信息可以通过方法描述符去找，尽管`formal_parameter_index`的`0`并不一定指的是方法描述符中的第一个参数描述符；§4.7.18中介绍了一个涉及到`parameter_annotations`表的类似的情况。</sub>
+
+- `throws_target`告诉你一个方法或构造器声明的`throws`语法中的第*i*个类型上出现了一个注解。
+```
+throws_target {
+    u2 throws_type_index;
+}
+```
+&emsp;&emsp;`throws_type_index`的值是一个索引，是一个什么索引呢？是这个`RuntimeVisibleTypeAnnotations`属性外层的`method_info`结构体的`Exceptions`属性的`exception_index_table`数组的一个索引。好家伙，这份儿绕啊。
+
+- `localvar_target`属性指的是注解出现在了局部变量声明的类型上，包括带资源`try`语句中的资源变量声明。
+
+```
+localvar_target {
+    u2 table_length;
+    {   u2 start_pc;
+        u2 length;
+        u2 index;
+    } table[table_length];
+}
+```
+
+&emsp;&emsp;`table_length`指的是`table`数组中有多少条记录。每条记录代表`code`数组偏移量的一个区间，一个局部变量在这个区间内存在一个值。同时还告诉你这个局部变量在当前帧的局部变量数组的哪个索引位置上可以找到。每条记录包含以下三个属性：
+
+&emsp;&emsp;`start_pc`、`length`<br/>
+&emsp;&emsp;&emsp;&emsp;在`code`数组的[`start_pc`, `start_pc + length`)区间内，指定的局部变量有一个值在这儿，区间是左闭右开的。
+
+&emsp;&emsp;`index`<br/>
+&emsp;&emsp;&emsp;&emsp;指定局部变量必须在当前帧的局部变量数组的`index`处。
