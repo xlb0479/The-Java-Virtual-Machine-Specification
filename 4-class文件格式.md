@@ -3107,3 +3107,19 @@ MethodParameters_attribute {
 &emsp;&emsp;&emsp;&emsp;如果是零，那么这个`elements`元素代表的是一个没名字的形参。
 
 &emsp;&emsp;&emsp;&emsp;如果非零，对应`constant_pool`中的记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个有效的形参的非限定名（§4.2.2）。
+
+&emsp;&emsp;`access_flags`<br/>
+&emsp;&emsp;&emsp;&emsp;可能的值如下：
+
+&emsp;&emsp;&emsp;&emsp;`0x0010（ACC_FINAL）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;说明形参是`final`的。
+
+&emsp;&emsp;&emsp;&emsp;`0x1000（ACC_SYNTHETIC）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;说明根据源码使用的语言规范来看（JLS §13.1），形参没有显式或隐式的声明在源码中。（编译器生成这个`class`文件的时候，形参也是它的一个实现产物。）
+
+&emsp;&emsp;&emsp;&emsp;`0x8000（ACC_MANDATED）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;说明根据源码使用的语言规范来看（JLS §13.1），形参隐式的声明在了源码中。（形参是由语言规范强制的，因此该语言的所有编译器都要生成它。）
+
+&emsp;&emsp;<sub>`parameters`数组中的第*i*条记录对应外层方法描述符的第*i*个参数描述符。（`parameter_count`之所以是一个字节是因为方法描述符最多只能有255个参数。）也就是意味着`parameters`数组中保存了该方法所有参数的信息。如果我们把形式变一变，比如`parameters`数组中的记录保存了它们对应的参数描述符，但这样会使`MethodParameter`属性变得过于复杂。</sub>
+
+&emsp;&emsp;<sub>`parameters`数组中的第*i*条记录并不一定对应着外层方法的`Signature`属性（如果有的话）中的第*i*个类型，或者是外层方法参数注解中的第*i*个注解。</sub>
