@@ -3065,3 +3065,45 @@ BootstrapMethods_attribute {
 
 &emsp;&emsp;`bootstrap_arguments[]`<br/>
 &emsp;&emsp;&emsp;&emsp;该表中的每条记录必须是`constant_pool`表的有效索引。对应的`constant_pool`中的记录必须时可加载的（§4.4）。
+
+### 4.7.24 MethodParameters属性
+
+它是`method_info`结构体（§4.6）的`attributes`表中的一个变长属性。该属性记录了方法的形参信息，比如参数的名字。
+
+在一个`mehtod_info`结构体的`attributes`表中最多只能有一个`MethodParameters`属性。
+
+格式如下：
+
+```
+MethodParameters_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u1 parameters_count;
+    {   u2 name_index;
+        u2 access_flags;
+    } parameters[parameters_count];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`MethodParameters`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`parameters_count`<br/>
+&emsp;&emsp;它给出了外层`method_info`结构体中`descriptor_index`引用的方法描述符（§4.3.3）中的参数描述符的数量。
+
+&emsp;&emsp;<sub>这个事儿并不需要让JVM在格式检查（§4.8）的过程中做强制要求。让方法描述符中的参数描述符跟下面的`parameters`表对应起来是JavaSE平台反射库的工作。</sub>
+
+`parameters[]`<br/>
+&emsp;&emsp;每条记录包含以下两个属性：
+
+&emsp;&emsp;`name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;要么是零，要么是`constant_pool`的有效索引。
+
+&emsp;&emsp;&emsp;&emsp;如果是零，那么这个`elements`元素代表的是一个没名字的形参。
+
+&emsp;&emsp;&emsp;&emsp;如果非零，对应`constant_pool`中的记录必须是一个`CONSTANT_Utf8_info`结构体，代表一个有效的形参的非限定名（§4.2.2）。
