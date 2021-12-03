@@ -3123,3 +3123,173 @@ MethodParameters_attribute {
 &emsp;&emsp;<sub>`parameters`数组中的第*i*条记录对应外层方法描述符的第*i*个参数描述符。（`parameter_count`之所以是一个字节是因为方法描述符最多只能有255个参数。）也就是意味着`parameters`数组中保存了该方法所有参数的信息。如果我们把形式变一变，比如`parameters`数组中的记录保存了它们对应的参数描述符，但这样会使`MethodParameter`属性变得过于复杂。</sub>
 
 &emsp;&emsp;<sub>`parameters`数组中的第*i*条记录并不一定对应着外层方法的`Signature`属性（如果有的话）中的第*i*个类型，或者是外层方法参数注解中的第*i*个注解。</sub>
+
+### 4.7.25 Module属性
+
+它是`ClassFile`结构体（§4.1）的`attributes`表中的一个变长属性。这个属性表明某一模块依赖了其它模块；对应的包有导出并且被某个模块打开了；模块中使用和提供的服务。
+
+在一个`ClassFile`结构体的`attributes`表中最多只能有一个`Module`属性。
+
+格式如下：
+
+```
+Module_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 module_name_index;
+    u2 module_flags;
+    u2 module_version_index;
+    u2 requires_count;
+    {   u2 requires_index;
+        u2 requires_flags;
+        u2 requires_version_index;
+    } requires[requires_count];
+    u2 exports_count;
+    {   u2 exports_index;
+        u2 exports_flags;
+        u2 exports_to_count;
+        u2 exports_to_index[exports_to_count];
+    } exports[exports_count];
+    u2 opens_count;
+    {   u2 opens_index;
+        u2 opens_flags;
+        u2 opens_to_count;
+        u2 opens_to_index[opens_to_count];
+    } opens[opens_count];
+    u2 uses_count;
+    u2 uses_index[uses_count];
+    u2 provides_count;
+    {   u2 provides_index;
+        u2 provides_with_count;
+        u2 provides_with_index[provides_with_count];
+    } provides[provides_count];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`Module`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`module_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Module_info`结构体（§4.4.11），表示当前模块。
+
+`module_flags`<br/>
+&emsp;&emsp;可能的值如下：
+
+&emsp;&emsp;`0x0020（ACC_OPEN）`<br/>
+&emsp;&emsp;&emsp;&emsp;说明这个模块是开放的。
+
+&emsp;&emsp;`0x1000（ACC_SYNTHETIC）`<br/>
+&emsp;&emsp;&emsp;&emsp;说明这个模块没有被显式或隐式的声明。
+
+&emsp;&emsp;`0x8000（ACC_MANDATED）`<br/>
+&emsp;&emsp;&emsp;&emsp;说明这个模块是隐式声明的。
+
+`module_version_index`<br/>
+&emsp;&emsp;必须是零或者是`constant_pool`的有效索引。如果是零，那么当前模块就没有版本信息。如果非零，`constant_pool`中对应的记录必须得是一个`CONSTANT_Utf8_info`结构体，代表当前模块的版本号。
+
+`requires_count`<br/>
+&emsp;&emsp;`requires`表的记录数。
+
+&emsp;&emsp;如果当前模块是`java.base`，该值必须是零。
+
+&emsp;&emsp;如果当前模块不是`java.base`，该值至少是一。
+
+`requires[]`<br/>
+&emsp;&emsp;每条记录表示当前模块的一个依赖。每条记录包含的属性如下：
+
+&emsp;&emsp;`requires_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Module_info`结构体，代表当前模块依赖的一个模块。
+
+&emsp;&emsp;&emsp;&emsp;`requires`表中每个`requires_index`对应的模块名只能出现一次。
+
+&emsp;&emsp;`requires_flags`<br/>
+&emsp;&emsp;&emsp;&emsp;可能的值如下：
+
+&emsp;&emsp;&emsp;&emsp;`0x0020（ACC_TRANSITIVE）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示依赖当前模块的任何其它模块通过该记录隐式声明了一个模块依赖。
+
+&emsp;&emsp;&emsp;&emsp;`0x0040（ACC_STATIC_PHASE）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这个依赖在静态阶段是强制的，比如在编译时，但是在动态阶段是可选的，比如在运行时。
+
+&emsp;&emsp;&emsp;&emsp;`0x1000（ACC_SYNTHETIC）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这个依赖在模块的源码声明中没有显式或隐式的声明。
+
+&emsp;&emsp;&emsp;&emsp;`0x8000（ACC_MANDATED）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这个依赖在模块源码声明中做了隐式声明。
+
+&emsp;&emsp;&emsp;&emsp;如果当前模块不是`java.base`，而且`class`文件版本号大于等于54.0，那么`requires_flags`中不能设置`ACC_TRANSITIVE`或`ACC_STATIC_PHASE`。
+
+&emsp;&emsp;`requires_version_index`<br/>
+&emsp;&emsp;&emsp;&emsp;要么是零要么是`constant_pool`的有效索引。如果是零，这个依赖就没有版本信息。如果非零，`constant_pool`对应的记录必须是一个`CONSTANT_Utf8_info`结构体，代表`requires_index`指定的模块的版本。
+
+&emsp;&emsp;除非当前模块是`java.base`，否则`requires`表中只能有一条记录可以让`requires_index`指向`java.base`同时还不为`requires_flags`设置`ACC_SYNTHETIC`。
+
+`exports_count`<br/>
+&emsp;&emsp;`exports`表的记录数。
+
+`exports[]`<br/>
+&emsp;&emsp;表中每条记录代表当前模块导出的一个包，这样就能让这个包中的`public`和`protected`类型，以及它们的`public`和`protected`成员在当前模块之外访问到，比如在一个有限的“友军”模块集合中进行访问。
+
+&emsp;&emsp;每条记录中包含的属性如下：
+
+&emsp;&emsp;`exports_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Package_info`结构体（§4.4.12），代表当前模块导出的一个包。
+
+&emsp;&emsp;&emsp;&emsp;`exports`表中的每条记录声明的包名只能出现一次。
+
+&emsp;&emsp;`exports_flags`<br/>
+&emsp;&emsp;&emsp;&emsp;可能的值如下：
+
+&emsp;&emsp;&emsp;&emsp;`0x1000（ACC_SYNTHETIC）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这个导出没有在模块的源码声明中显式或隐式的进行声明。
+
+&emsp;&emsp;&emsp;&emsp;`0x8000（ACC_MANDATED）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这个导出在模块的源码声明中做了隐式声明。
+
+&emsp;&emsp;`exports_to_count`<br/>
+&emsp;&emsp;&emsp;&emsp;`exports_to_index`表的记录数。
+
+&emsp;&emsp;&emsp;&emsp;如果等于零，那么当前模块就是以*非限定*的形式导出了这个包；其他模块中的任意代码都可以访问这个包中的类型和成员。
+
+&emsp;&emsp;&emsp;&emsp;如果非零，那么当前模块就是以*限定*形式导出了这个包；只有`exports_to_index`表中对应模块中的代码才能访问这个包中的类型和成员。
+
+&emsp;&emsp;`exports_to_index[]`<br/>
+&emsp;&emsp;&emsp;&emsp;表中的每条记录必须是`constant_pool`表的有效索引。`constant_pool`中对应的记录必须是一个`CONSTANT_Module_info`结构体，表示指定的模块中的代码可以访问这个被导出包中的类型和成员。
+
+&emsp;&emsp;&emsp;&emsp;对于`exports`表中的每条记录，`exports_to_index`表中对应的模块名只能出现一次。
+
+`opens_count`<br/>
+&emsp;&emsp;代表`opens`表中的记录数。
+
+&emsp;&emsp;如果当前模块是开放的，那么这个值必须是零。
+
+`opens`<br/>
+&emsp;&emsp;表中每条记录代表当前模块开放的一个包，如果包开放了，包中所有的类型以及它们的成员都可以在包外部被JavaSE平台的反射库访问，比如从一个有限的“友军”模块集合中访问。
+
+&emsp;&emsp;每条记录包含的属性如下：
+
+&emsp;&emsp;`opens_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Package_info`结构体，代表当前模块开放的一个包。
+
+&emsp;&emsp;&emsp;&emsp;在`opens`表中，`opens_index`对应的每个包名只能出现一次。
+
+&emsp;&emsp;`open_flags`<br/>
+&emsp;&emsp;&emsp;&emsp;可能的值如下：
+
+&emsp;&emsp;&emsp;&emsp;`0x1000（ACC_SYNTHETIC）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这种开放并没有显式或隐式的声明在模块的源码声明中。
+
+&emsp;&emsp;&emsp;&emsp;`0x8000（ACC_MANDATED）`<br/>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;表示这种开放隐式的声明在了模块的源码声明中。
+
+&emsp;&emsp;`opens_to_count`<br/>
+&emsp;&emsp;&emsp;&emsp;代表`opens_to_index`表的记录数。
+
+&emsp;&emsp;&emsp;&emsp;如果是零，那么当前模块就是以“非限定”的方式开放了这个包；任何其他模块中的代码都可以通过反射的当时访问这个包中的类型和成员。
+
+&emsp;&emsp;&emsp;&emsp;如果非零，那么当前模块就是以“限定”形式开放了这个包；只有`export_to_index`表（本宝宝注：这里感觉是写错了，应该是`opens_to_index`表吧）中列出的模块中的代码才能通过反射的方式访问这个包中的类型和成员。
