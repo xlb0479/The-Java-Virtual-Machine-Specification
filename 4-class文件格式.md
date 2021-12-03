@@ -3017,3 +3017,51 @@ AnnotationDefault_attribute {
 `default_value`<br/>
 &emsp;&emsp;这个值代表该`AnnotationDefault`属性外层`method_info`结构体表达的注解接口元素的默认值。（绕来绕去讲废话。）
 
+### 4.7.23 BootstrapMethods属性
+
+它是`ClassFile`结构体（§4.1）的`attributes`表中的一个变长属性。该属性记录了用来产生动态计算常量和动态计算调用点的引导方法（§4.4.10）。
+
+当`ClassFile`结构体的`constant_pool`表中至少存在一个`CONSTANT_Dynamic_info`或`CONSTANT_InvokeDynamic_info`记录时，该结构体的`attributes`表中必须有且仅能有一个`BootstrapMethods`属性。
+
+一个`ClassFile`结构体的`attributes`表中最多只能有一个`BootstrapMethods`属性。
+
+格式如下：
+
+```
+BootstrapMethods_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_bootstrap_methods;
+    {   u2 bootstrap_method_ref;
+        u2 num_bootstrap_arguments;
+        u2 bootstrap_arguments[num_bootstrap_arguments];
+    } bootstrap_methods[num_bootstrap_methods];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`BootstrapMethods`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包括开头的六个字节。
+
+`num_bootstrap_methods`<br/>
+&emsp;&emsp;表示`bootstrap_methods`数组中引导方法的个数。
+
+`bootstrap_methods`<br/>
+&emsp;&emsp;表中每条记录包含一个`CONSTANT_MethodHandle_info`结构体的索引，它定义了一个引导方法和一个引导方法的*静态参数*的索引序列（可能为空）。
+
+&emsp;&emsp;表中每个记录包含以下三个属性：
+
+&emsp;&emsp;`bootstrap_method_ref`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_MethodHandle_info`结构体（§4.4.8）。
+
+&emsp;&emsp;&emsp;&emsp;<sub>方法句柄在动态计算常量或调用点（§5.4.3.6）的解析过程中就弄好了，然后就可以通过`java.lang.invoke.MethodHandle`的`invokeWithArguments`调用了。方法句柄必须能够接受§5.4.3.6中定义的参数数组，否则解析过程就会失败。</sub>
+
+&emsp;&emsp;`num_bootstrap_arguments`<br/>
+&emsp;&emsp;&emsp;&emsp;`bootstrap_arguments`数组中元素的个数。
+
+&emsp;&emsp;`bootstrap_arguments[]`<br/>
+&emsp;&emsp;&emsp;&emsp;该表中的每条记录必须是`constant_pool`表的有效索引。对应的`constant_pool`中的记录必须时可加载的（§4.4）。
