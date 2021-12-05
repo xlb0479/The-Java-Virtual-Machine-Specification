@@ -3319,3 +3319,13 @@ Module_attribute {
 &emsp;&emsp;&emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Class_info`结构体，代表一个服务接口，当前模块为该服务接口提供了一个服务实现。
 
 &emsp;&emsp;&emsp;&emsp;对于`provides`表中的每条记录，`provides_index`对应的服务接口名只能出现一次。
+
+&emsp;&emsp;`provides_with_count`<br/>
+&emsp;&emsp;&emsp;&emsp;表示`provides_with_index`表的记录数。
+
+&emsp;&emsp;&emsp;&emsp;必须非零。
+
+&emsp;&emsp;`provides_with_index[]`<br/>
+&emsp;&emsp;&emsp;&emsp;表中每条记录必须是`constant_pool`的有效索引。`constant_pool`中对应的记录必须是一个`CONSTANT_Class_info`结构体，代表一个服务实现，对应的服务接口由`provides_index`指定。
+
+&emsp;&emsp;&emsp;&emsp;对于`provides`表中的每条记录，`provides_with_index`表中的服务实现对应的名字是唯一的。
