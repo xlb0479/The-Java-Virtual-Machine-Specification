@@ -3329,3 +3329,36 @@ Module_attribute {
 &emsp;&emsp;&emsp;&emsp;表中每条记录必须是`constant_pool`的有效索引。`constant_pool`中对应的记录必须是一个`CONSTANT_Class_info`结构体，代表一个服务实现，对应的服务接口由`provides_index`指定。
 
 &emsp;&emsp;&emsp;&emsp;对于`provides`表中的每条记录，`provides_with_index`表中的服务实现对应的名字是唯一的。
+
+### 4.7.26 ModulePackages属性
+
+它是`ClassFile`结构体（§4.1）的`attributes`表中的一个变长属性。这个属性的意思是一个模块中的所有包，通过`Module`属性全都该导出或开放了，包括`Module`属性中记录的所有服务实现的包。
+
+在一个`ClassFile`结构体的`attributes`表中，最多只能有一个`ModulePackages`属性。
+
+格式如下：
+
+```
+ModulePackages_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 package_count;
+    u2 package_index[package_count];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`ModulePackages`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;表示属性的长度，不包括开头的六个字节。
+
+`package_count`<br/>
+&emsp;&emsp;代表`package_index`表中的记录数。
+
+`package_index[]`<br/>
+&emsp;&emsp;表中的记录必须是`constant_pool`的有效索引。`constant_pool`中对应的记录必须是一个`CONSTANT_Package_info`结构体（§4.4.12），代表当前模块中的一个包。
+
+&emsp;&emsp;`package_index`表中的包名唯一。
