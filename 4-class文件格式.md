@@ -3455,3 +3455,5 @@ NestMembers_attribute {
 &emsp;&emsp;数组中每条记录必须是`constant_pool`的有效索引。`constant_pool`表中对应的记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表一个类或接口，它是当前类或接口管理的嵌套中的一个成员。
 
 &emsp;&emsp;<sub>访问控制（§5.4.4)）会参考`classes`数组中的数据。它应当包含其它类和接口的引用，这些类和接口得在相同的运行时包中，而且它们都得有`NestHost`属性，引用的就是当前类或接口。数组中不满足这些要求的元素都会被访问控制所忽略。</sub>
+
+### 4.7.30 Record属性
