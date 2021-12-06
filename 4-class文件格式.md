@@ -3457,3 +3457,63 @@ NestMembers_attribute {
 &emsp;&emsp;<sub>访问控制（§5.4.4)）会参考`classes`数组中的数据。它应当包含其它类和接口的引用，这些类和接口得在相同的运行时包中，而且它们都得有`NestHost`属性，引用的就是当前类或接口。数组中不满足这些要求的元素都会被访问控制所忽略。</sub>
 
 ### 4.7.30 Record属性
+
+它是`ClassFile`结构体（§4.1）的`attributes`表的一个变长属性。该属性告诉你当前类就是一个record类（JLS §8.10），并且还保存了这个record类的record成分信息（JLS §8.10.1）。
+
+在一个`ClassFile`结构体的`attributes`表中最多只能有一个`Record`属性。
+
+格式如下：
+
+```
+Record_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 components_count;
+    record_component_info components[components_count];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串“`Record`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包含开头的六个字节。
+
+`components_count`<br/>
+&emsp;&emsp;代表`components`表的记录数。
+
+`components[]`<br/>
+&emsp;&emsp;每条记录代表当前类的一个record成分，按照声明的顺序排序。`record_component_info`结构体格式如下：
+
+```
+record_component_info {
+    u2 name_index;
+    u2 descriptor_index;
+    u2 attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
+
+&emsp;&emsp;解释如下：
+
+&emsp;&emsp;`name_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表record成分的一个有效的非限定名（§4.2.2）。
+
+&emsp;&emsp;`descriptor_index`<br/>
+&emsp;&emsp;&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表用来对record成分的类型做编码的字段描述符（§4.3.2）。
+
+&emsp;&emsp;`attributes_count`<br/>
+&emsp;&emsp;&emsp;&emsp;代表该record成分的额外属性的数量。
+
+&emsp;&emsp;`attributes[]`<br/>
+&emsp;&emsp;&emsp;&emsp;每条记录必须是一个`attribute_info`结构体（§4.7）。
+
+&emsp;&emsp;&emsp;&emsp;一个record成分可以包含任意数量的可选属性。
+
+&emsp;&emsp;&emsp;&emsp;这里能出现的属性见表4.7-C。
+
+&emsp;&emsp;&emsp;&emsp;预定义属性相关规则见§4.7。
+
+&emsp;&emsp;非预定义属性相关规则见§4.7.1。
