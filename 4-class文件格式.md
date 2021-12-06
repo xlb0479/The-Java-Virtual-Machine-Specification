@@ -3362,3 +3362,7 @@ ModulePackages_attribute {
 &emsp;&emsp;表中的记录必须是`constant_pool`的有效索引。`constant_pool`中对应的记录必须是一个`CONSTANT_Package_info`结构体（§4.4.12），代表当前模块中的一个包。
 
 &emsp;&emsp;`package_index`表中的包名唯一。
+
+### 4.7.27 ModuleMainClass属性
+
+它是`ClassFile`结构体的`attributes`表中的一个定长属性（§4.1）。该属性代表模块的主类。
