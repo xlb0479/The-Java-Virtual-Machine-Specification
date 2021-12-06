@@ -3417,4 +3417,4 @@ NestHost_attribute {
 `host_class_index`<br/>
 &emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表当前类或接口的嵌套主的类或接口。
 
-&emsp;&emsp;<sub>如果嵌套主无法被加载，或者跟当前类或接口不在同一个运行时包中，又或者没有</sub>
+&emsp;&emsp;<sub>如果嵌套主无法被加载，或者跟当前类或接口不在同一个运行时包中，又或者没有为当前类或接口的嵌套成员进行授权，那么在访问控制阶段可能会出现错误（§5.4.4）。</sub>
