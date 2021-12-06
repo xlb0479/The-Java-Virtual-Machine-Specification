@@ -3389,3 +3389,32 @@ ModuleMainClass_attribute {
 
 `main_class_index`<br/>
 &emsp;&emsp;必须是`constant_pool`表的有效索引。对应记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表当前模块的主类。
+
+### 4.7.28 NestHost属性
+
+它是`ClassFile`结构体的`attributes`表中的一个定长属性。该属性记录了当前类或接口所属嵌套的嵌套主（§5.4.4）。
+
+在一个`ClassFile`结构体的`attributes`表中最多只能有一个`NestHost`属性。
+
+格式如下：
+
+```
+NestHost_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 host_class_index;
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串值“`NestHost`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;必须是二。
+
+`host_class_index`<br/>
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表当前类或接口的嵌套主的类或接口。
+
+&emsp;&emsp;<sub>如果嵌套主无法被加载，或者跟当前类或接口不在同一个运行时包中，又或者没有</sub>
