@@ -3556,3 +3556,20 @@ PermittedSubclasses_attribute {
 &emsp;&emsp;数组中的每个值必须是`constant_pool`的有效索引。`constant_pool`表中对应的记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表一个类或接口，它被授权可以直接继承或实现当前类或接口。
 
 &emsp;&emsp;<sub>当一个类或接口被创建出来，并且尝试直接继承或实现当前类或接口（§5.3.5），此时就会参考`classes`数组中的数据。如果里面的类或接口没有尝试直接继承或实现当前类或接口，那么就直接被忽略了。</sub>
+
+## 4.8 格式检查
+
+当一个潜在的`class`文件要开始被JVM加载的时候（§5.3），JVM首先要确保这个文件具备`class`文件的基本格式要求（§4.1）。这个过程就是传说中的*格式检查*。具体是这样的：
+
+- 开头四个字节必须包含正确的魔数。
+- 所有预定义属性（§4.7）的长度必须正确，除了`StackMapTable`、`RuntimeVisibleAnnotations`、`RuntimeInvisibleAnnotations`、`RuntimeVisibleParameterAnnotations`、`RuntimeInvisibleParameterAnnotations`、`RuntimeVisibleTypeAnnotations`、`RuntimeInvisibleTypeAnnotations`、`AnnotationDefault`。
+- `class`文件不能被截断或者结尾处有多余的字节。
+- 常量池必须要满足§4.4中讲的所有约束条件。
+
+&emsp;&emsp;<sub>比如常量池中的每个`CONSTANT_Class_info`结构体的`name_index`属性必须要对应一个有效的常量池索引，对应着一个`CONSTANT_Utf8_info`结构体。</sub>
+
+- 常量池中所有的字段引用和方法引用必须拥有有效的名字、有效的类、有效的描述符（§4.3）。
+
+&emsp;&emsp;格式检查并不确保指定的字段或方法存在于指定的类中，也不确保指定的描述符引用了一个真正的类。格式检查只是确保格式上是正确的。更详细的检查是在对字节码做校验和解析的时候弄。
+
+要想解释好`class`文件中的内容，这些基本的完整性校验是必需的。格式检查不同于字节码校验，尽管历史上它们曾经一度混淆，因为它们都属于是完整性的校验。
