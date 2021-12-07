@@ -3516,4 +3516,43 @@ record_component_info {
 
 &emsp;&emsp;&emsp;&emsp;预定义属性相关规则见§4.7。
 
-&emsp;&emsp;非预定义属性相关规则见§4.7.1。
+&emsp;&emsp;&emsp;&emsp;非预定义属性相关规则见§4.7.1。
+
+### 4.7.31 PermittedSubclasses属性
+
+它是`ClassFile`结构体（§4.1）的`attribtues`表的一个变长属性。该属性纪录了被授权可以直接继承或实现当前类或接口的那些类和接口（§5.3.5）。啦啦啦啦。
+
+&emsp;&emsp;<sub>在Java语言中可以使用`sealed`修饰符来表示一个类或接口可以限制它的直接子类或直接子接口。你可能觉得这个修饰符应该就是在`class`文件中有一个`ACC_SEALED`标记，因为比如`final`的话就是有一个`ACC_FINAL`标记。啦啦啦这你可想错了，在`class`文件中，`sealed`类是通过`PermittedSubclasses`属性来实现的。</sub>
+
+在一个`ClassFile`结构体的`attributes`表中最多只能有一个`PermittedSubclasses`属性，而且这个`ClassFile`的`access_flags`属性中不能设置`ACC_FINAL`标记。
+
+如果`ClassFile`的`access_flags`设置了`ACC_FINAL`标记，那就不能有`PermittedSubclasses`属性。
+
+&emsp;&emsp;<sub>`sealed`跟`final`可不一样：前者是有一个被授权子类的列表的，而后者是不能有子类的。因此一个`ClassFile`可以有`PermittedSubclasses`属性，也可以设置`ACC_FINAL`标记，但两者不能同时出现。</sub>
+
+格式如下：
+
+```
+PermittedSubclasses_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 number_of_classes;
+    u2 classes[number_of_classes];
+}
+```
+
+解释如下：
+
+`attribute_name_index`<br/>
+&emsp;&emsp;必须是`constant_pool`的有效索引。对应记录必须是一个`CONSTANT_Utf8_info`结构体（§4.4.7），代表字符串“`PermittedSubclasses`”。
+
+`attribute_length`<br/>
+&emsp;&emsp;属性的长度，不包含开头的六个字节。
+
+`number_of_classes`<br/>
+&emsp;&emsp;`classes`数组中的记录数。
+
+`classes[]`<br/>
+&emsp;&emsp;数组中的每个值必须是`constant_pool`的有效索引。`constant_pool`表中对应的记录必须是一个`CONSTANT_Class_info`结构体（§4.4.1），代表一个类或接口，它被授权可以直接继承或实现当前类或接口。
+
+&emsp;&emsp;<sub>当一个类或接口被创建出来，并且尝试直接继承或实现当前类或接口（§5.3.5），此时就会参考`classes`数组中的数据。如果里面的类或接口没有尝试直接继承或实现当前类或接口，那么就直接被忽略了。</sub>
