@@ -3582,7 +3582,7 @@ PermittedSubclasses_attribute {
 
 `class`文件的*静态约束*要的就是文件的格式正确性。前面的章节中已经介绍过这些约束，除了`class`文件中代码的静态约束。这种静态约束定义了`code`数组中JVM指令的形式，以及每个指令的操作数是什么样的。
 
-静态约束如下：
+`code`数组中的指令静态约束如下：
 - 只允许§6.5中列出的指令出现在`code`数组中。如果指令使用保留的操作码（§6.2）或者不在本规范给出的范围内，打死也不能放到`code`数组中。
 
 &emsp;&emsp;如果`class`文件版本号大于等于51.0，那么`code`数组中不能出现<i>`jsr`</i>或<i>`jsr_w`</i>指令。
@@ -3590,4 +3590,40 @@ PermittedSubclasses_attribute {
 - `code`数组中第一个指令的操作码必须从索引`0`开始。（没看懂）
 - 除了最后一条指令，`code`数组中的每条指令的下一条指令操作码的索引等于当前指令操作码的索引加上指令的长度，包括所有的操作数。
 
-&emsp;&emsp;
+&emsp;&emsp;下面这段话我实在读不懂。*wide*指令也是如此；*wide*指令要修改的操作的操作码也属于该*wide*指令的操作数之一。这个操作码永远无法被运算过程直接接触到。
+
+- `code`数组中最后一个指令的最后一个字节必须位于索引`code_length - 1`处。
+
+`code`数组中的指令操作数的静态约束如下：
+
+- 所有跳跃和分叉指令（*jsr*, *jsr_w*, *goto*, *goto_w*, *ifeq*, *ifne*, *ifle*, *iflt*, *ifge*, *ifgt*, *ifnull*, *ifnonnull*, *if_icmpeq*, *if_icmpne*, *if_icmple,if_icmplt*, *if_icmpge*, *if_icmpgt*, *if_acmpeq*, *if_acmpne*）的目标必须是该方法内部某条指令的操作码。
+
+&emsp;&emsp;跳跃或分叉指令的目标永远不能是一个*wide*指令要修改的操作的操作码；一个跳跃或分叉的目标可以是*wide*指令本身。
+
+- *tableswitch*指令的每个目标，包括默认目标，必须是当前方法中的指令的操作码。
+
+&emsp;&emsp;每个*tableswitch*指令的跳跃表中必须要有一系列的记录，而且必须要跟跳跃表的*low*和*high*操作数的值保持一致，*low*值必须小于等于*high*值。
+
+&emsp;&emsp;*tableswitch*指令的目标不能是*wide*指令要修改的操作的操作码；目标可以是*wide*指令本身。
+
+- *lookupswitch*指令的每个目标，包括默认目标，必须是当前方法中的指令的操作码。
+
+&emsp;&emsp;每条*lookupswitch*指令都有一系列*match-offset*对儿，它们的值跟操作数*npairs*的值保持一致。这些*match-offset*对儿必须按照带符号匹配值的数值升序排序。
+
+&emsp;&emsp;*lookupswitch*指令的目标不能是*wide*指令要修改的操作的操作码；目标可以是*wide*指令本身。
+
+- 每条*ldc*和*ldc_w*指令的操作数必须代表一个`constant_pool`表中的有效索引。`constant_pool`表中对应的记录必须是可加载的（§4.4），而且不能是以下内容：
+    - `CONSTANT_Long`或`CONSTANT_Double`记录。
+    - `CONSTANT_Dynamic`记录，并且它引用了一个`CONSTANT_NameAndType_info`结构体，这个结构体又指出了`J`（代表`long`）或`D`（代表`double`）的描述符。
+- 每条*ldc2_w*指令的操作数必须代表一个`constant_pool`表中的有效索引。`constant_pool`表中对应的记录必须是可加载的（§4.4），而且得是以下内容之一：
+    - `CONSTANT_Long`或`CONSTANT_Double`记录。
+    - `CONSTANT_Dynamic`记录，并且它引用了一个`CONSTANT_NameAndType_info`结构体，这个结构体又指出了`J`（代表`long`）或`D`（代表`double`）的描述符。
+
+&emsp;&emsp;&emsp;&emsp;后续的常量池索引也得是有效的索引，而且池中对应的记录绝对不能被用到。
+
+- 每条*getfield*, *putfield*, *getstatic*, *putstatic*指令的操作数必须代表一个`constant_pool`表中的有效索引。常量池中的记录必须是`CONSTANT_Fieldref`。
+- 每条*invokevirtual*指令的*indexbyte*操作数必须代表一个`constant_pool`表中的有效索引。常量池中对应的记录必须是`CONSTANT_Methodref`。
+- 每条*invokespecial*指令和*invokestatic*指令的*indexbyte*操作数必须代表一个`constant_pool`表中的有效索引。如果`class`文件版本号小于52.0，池中对应的记录必须是`CONSTANT_Methodref`；如果大于等于52.0，池中对应的记录必须是`CONSTANT_Methodref`或`CONSTANT_InterfaceMethodref`。
+- 每条*invokeinterface*指令的*indexbyte*操作数必须代表一个`constant_pool`表中的有效索引。常量池中对应的记录必须是`CONSTANT_InterfaceMethodref`。
+
+&emsp;&emsp;每个*invokeinterface*指令的第四个操作数字节必须是零。
