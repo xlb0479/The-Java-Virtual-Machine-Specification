@@ -3626,4 +3626,34 @@ PermittedSubclasses_attribute {
 - 每条*invokespecial*指令和*invokestatic*指令的*indexbyte*操作数必须代表一个`constant_pool`表中的有效索引。如果`class`文件版本号小于52.0，池中对应的记录必须是`CONSTANT_Methodref`；如果大于等于52.0，池中对应的记录必须是`CONSTANT_Methodref`或`CONSTANT_InterfaceMethodref`。
 - 每条*invokeinterface*指令的*indexbyte*操作数必须代表一个`constant_pool`表中的有效索引。常量池中对应的记录必须是`CONSTANT_InterfaceMethodref`。
 
+&emsp;&emsp;每条*invokeinterface*指令的*count*操作数的值必须要给出传给接口方法的参数需要存储的局部变量的数量，正如`CONSTANT_InterfaceMethodref`引用的`CONSTANT_NameAndType_info`结构体的描述所暗示的那样。啧啧，都出来暗示了，我这翻译水平可以，拟人小王子。
+
 &emsp;&emsp;每个*invokeinterface*指令的第四个操作数字节必须是零。
+
+- 每条*invokedynamic*指令的*indexbyte*操作数必须代表一个`constant_pool`表中的有效索引。常量池中对应的记录必须是`CONSTANT_InvokeDynamic`。
+
+&emsp;&emsp;每条*invokedynamic*指令的第三第四个参数必须是零。
+
+- 只有*invokespecial*指令才能调用实例初始化方法（§2.9.1）。
+
+&emsp;&emsp;方法调用指令是不能调用以'`<`'（'`\u003c`'）开头的方法的。特别是类或接口的初始化方法，以特殊的`<clinit>`命名，从来都不会直接被JVM指令调用，只是隐式的被JVM本身所调用。
+
+- 每条*instanceof*, *checkcast*, *new*, *anewarray*指令的操作数，以及每条*multianewarray*指令的*indexbyte*操作数，必须代表`constant_pool`表的一个有效索引。表中对应记录必须是`CONSTANT_Class`。
+- *new*指令引用的常量池记录不能是代表数组类型的`CONSTANT_Class`（§4.3.2）。该指令不能用来创建数组。
+- *anewarray*指令创建的数组维度不能大于255。
+- *multianewarray*指令创建的多维数组的维度至少要等于*dimensions*操作数的值。也就是说，虽然一个*multianewarray*指令不需要创建它的*indexbyte*操作数引用的数组类型的所有维度，但是创建的维度不能大于数组类型中的维度。
+
+&emsp;&emsp;每条*multianewarray*指令的*dimensions*操作数的值不能是零。
+
+- 每条*newarray*指令的*atype*操作数的值必须是`T_BOOLEAN`（4）, `T_CHAR`（5）, `T_FLOAT`（6）, `T_DOUBLE`（7）, `T_BYTE`（8）, `T_SHORT`（9）, `T_INT`（10）, `T_LONG`（11）之一。
+- 每条*iload*、*fload*、*aload*、*istore*、*fstore*、*astore*、*iinc*、*ret*指令的*index*操作数必须是一个非负整数，而且不能大于`max_locals - 1`。
+
+&emsp;&emsp;每条*iload_&lt;n&gt;*、*fload_&lt;n&gt;*、*aload_&lt;n&gt;*、*istore_&lt;n&gt;*、*fstore_&lt;n&gt;*、*astore_&lt;n&gt;*指令的隐式索引必须不能大于`max_locals - 1`。
+
+- 每条*lload*，*dload*，*lstore*，*dstore*指令的*index*操作数不能大于`max_locals - 2`。
+
+&emsp;&emsp;每条*lload_&lt;n&gt;*，*dload_&lt;n&gt;*，*lstore_&lt;n&gt;*，*dstore_&lt;n&gt;*指令的隐式索引必须不能大于`max_locals - 2`。
+
+- 每条*wide*指令，如果修改的是*iload*，*fload*，*aload*，*istore*，*fstore*，*astore*，*iinc*，*ret*指令，那么它的*indexbyte*操作数必须要代表一个非负整数，且不能大于`max_locals - 1`。
+
+&emsp;&emsp;每条*wide*指令，如果修改的是*lload*，*dload*，*lstore*，*dstore*指令，那么它的*indexbyte*操作数必须代表一个非负整数，且不能大于`max_locals - 2`。
