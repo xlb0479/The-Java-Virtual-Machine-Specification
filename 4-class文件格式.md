@@ -3657,7 +3657,6 @@ PermittedSubclasses_attribute {
 - 每条*wide*指令，如果修改的是*iload*，*fload*，*aload*，*istore*，*fstore*，*astore*，*iinc*，*ret*指令，那么它的*indexbyte*操作数必须要代表一个非负整数，且不能大于`max_locals - 1`。
 
 &emsp;&emsp;每条*wide*指令，如果修改的是*lload*，*dload*，*lstore*，*dstore*指令，那么它的*indexbyte*操作数必须代表一个非负整数，且不能大于`max_locals - 2`。
-
 ### 4.9.2 结构化约束
 
 关于`code`数组的结构化约束，它定义了JVM指令之间的关系。结构化约束如下：
@@ -3706,3 +3705,27 @@ PermittedSubclasses_attribute {
     - 如果方法返回一个`float`、`long`、`double`，那么对应只能用*freturn*、*lreturn*、*dreturn*指令。
     - 如果方法返回一个`reference`类型，那么只能用*areturn*指令，而且返回值的类型必须跟方法返回描述是赋值兼容的（§4.3.3）。
     - 所有的实例初始化方法、类或接口初始化方法、以及叫嚣要返回`void`的方法，都只能使用*return*指令。
+- 通过*getfield*指令访问或通过*putfield*指令进行修改的每一个类实例的类型（也就是对操作数栈引用目标的类型），必须跟指令中声明的类类型是赋值兼容的。
+- 通过*putfield*或*putstatic*指令存储的每一个值的类型必须跟类实例或类中该字段（§4.3.2）的描述符是兼容的：
+    - 如果描述符类型是`boolean`、`byte`、`char`、`short`或`int`，那么这个值必须是个`int`。
+    - 如果描述符类型是`float`、`long`、`double`，那么这个值对应必须是一个`float`、`long`、`double`。
+    - 如果描述符类型是一个`reference`类型，那么这个值的类型必须得跟描述符类型是赋值兼容的。
+- 使用*aastore*指令存储到数组中的每个值的类型必须是一个`reference`类型。
+
+&emsp;&emsp;通过*aastore*指令存入数组的成分类型同样必须得是一个`reference`类型。
+
+- 每个*athrow*指令扔出来的值必须是`Throwable`类或其子类的实例。
+
+&emsp;&emsp;方法的`Code_attribute`结构体的`exception_table`数组中的`catch_type`属性中的类，必须得是`Throwable`或其子类。
+
+- 如果*getfield*或*putfield*访问的是一个超类中的`protected`字段，而且它所在的运行时包跟当前类还不一样，那么这个被访问的类实例的类型（也就是对操作数栈的引用目标的类型）必须跟当前类是赋值兼容的。
+
+&emsp;&emsp;如果*invokevirtual*或*invokespecial*指令访问的是一个超类中声明的`protected`方法，而且它跟当前类的运行时包也不一样，那么这个被访问的类实例的类型（也就是对操作数栈引用目标的类型）必须跟当前类是赋值兼容的。
+
+- 执行流永远不会跌穿`code`数组。
+- 不能从局部变量中加载返回地址（`returnAddress`类型的值）。
+- `jsr`或`jsr_w`指令后面跟着的指令只能用单个`ret`指令进行返回。
+- 如果是被返回到了`jsw`或`jsr_w`指令，那么这两个指令就不能用来递归调用一个子过程，而且这个子过程已经在子过程调用链中出现了。（如果是在一个`finally`块中可以继续使用`try-finally`块来嵌套子过程。）这说的这都是啥啊，不懂呀。
+- 每个`returnAddress`类型的实例最多可以被返回一次。
+
+&emsp;&emsp;如果一个*ret*指令的返回点是在子过程调用链中位于该指令的上方某处，对应了一个`returnAddress`类型的实例，那么这个实例永远不能被用来当返回地址。
