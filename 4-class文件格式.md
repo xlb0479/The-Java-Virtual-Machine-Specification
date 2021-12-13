@@ -3802,7 +3802,7 @@ Prolog预言`classIsTypeSafe`假设`Class`是一个Prolog词条，代表一个�
 
 &emsp;&emsp;<sub>比如我们假设这样一个语言`classMethods(Class, Methods)`，第一个词条参数是上面描述的类，第二个参数是一个列表，由该类中的所有方法组成，表达的方式也很简易，后面会说。</sub>
 
-假设预言`classIsTypeSafe`不为真，那么类型检查器必须要抛出一个`VerifyError`异常，表示这个`class`文件格式有问题。否则，该`class`文件即通过类型检查，字节码校验顺利完成。
+当且仅当预言`classIsTypeSafe`不为真，那么类型检查器必须要抛出一个`VerifyError`异常，表示这个`class`文件格式有问题。否则，该`class`文件即通过类型检查，字节码校验顺利完成。
 
 本节剩余的内容会详细介绍类型检查的过程：
 
@@ -3812,3 +3812,51 @@ Prolog预言`classIsTypeSafe`假设`Class`是一个Prolog词条，代表一个�
 - 第四，我们给出一个方法是如何做类型检查的，包括有代码（§4.10.1.6）和无代码（§4.10.1.5）的方法。
 - 第五，我们要讨论对于所有加载和存储指令常见的类型检查问题（§4.10.1.7），以及访问`protected`成员时的问题（§4.10.1.8）。
 - 最后，我们定义出每条指令的类型检查规则（§4.10.1.9）。
+
+#### 4.10.1.1 JVM制品的访问器
+
+我们明确规定了28个Prolog预言（“访问器”），它们具有预期的行为，但是本书中并不会给出它们的形式化定义。
+
+`classClassName(Class, ClassName)`<br/>
+&emsp;&emsp;提取`Class`类的名字，`ClassName`。
+
+`classIsInterface(Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类是接口时为真。
+
+`classIsNotFinal(Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类不是一个`final`类。
+
+`classSuperClassName(Class, SuperClassName)`<br/>
+&emsp;&emsp;提取`Class`类的超类的名字，`SuperClassName`
+
+`classInterfaces(Class, Interfaces)`<br/>
+&emsp;&emsp;提取`Class`类的直接父接口列表，`Interfaces`
+
+`classMethods(Class, Methods)`<br/>
+&emsp;&emsp;提取`Class`类中声明的方法的列表，`Methods`。
+
+`classAttributes(Class, Attributes)`<br/>
+&emsp;&emsp;提取`Class`类的属性的列表，`Attributes`。
+
+&emsp;&emsp;每个属性都被表达成了`attribute(AttributeName, AttributeContents)`形式的函子引用，其中`AttributeName`是属性的名字。属性内容的格式这里没有定义。
+
+`classDefiningLoader(Class, Loader)`<br/>
+&emsp;&emsp;提取`Class`类的定义类加载器，`Loader`。
+
+`isBootstrapLoader(Loader)`<br/>
+&emsp;&emsp;当且仅当类加载器`Loader`是引导类加载器。
+
+`loadedClass(Name, InitiatingLoader, ClassDefinition)`<br/>
+&emsp;&emsp;当且仅当存在一个名为`Name`的类，它在被类加载器`InitiatingLoader`加载时的表现形式（按照本书要求）是`ClassDefinition`。
+
+`methodName(Method, Name)`<br/>
+&emsp;&emsp;提取方法`Method`的名字，`Name`。
+
+`methodAccessFlags(Method, AccessFlags)`<br/>
+&emsp;&emsp;提取方法`Method`的访问标记，`AccessFlags`。
+
+`methodDescriptor(Method, Descriptor)`<br/>
+&emsp;&emsp;提取方法`Method`的描述符，`Descriptor`。
+
+`methodAttributes(Method, Attributes)`<br/>
+&emsp;&emsp;提取方法`Method`的属性的列表，`Attributes`。
