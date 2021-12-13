@@ -3767,4 +3767,35 @@ JVM实现时，可能会使用两种策略进行校验：
 
 &emsp;&emsp;<sub>如果类型检查失败，启用了类型推断，然后成功了，此时自然会出现性能上的损耗。这种损耗无法避免。这也提醒了工具的开发者，他们需要调整他们的产物了，也算是提供了一种额外的刺激手段。</sub>
 
-&emsp;&emsp;<sub></sub>
+&emsp;&emsp;<sub>总的来说吧，采用类型推断做降级校验，既可以让JavaSE平台的栈映射帧平滑的接入进来（如果在版本号为50.0的`class`中没有出现，那就可以降级），而且还可以从JavaSE平台中平滑的删掉*jsr*和*jsr_w*指令（如果在版本号为50.0的`class`中没有出现，那就可以降级）。</sub>
+
+如果一个JVM实现要在版本号50.0的类文件上做类型推断校验，那么就必须在所有类型检查校验失败时都要这么做。
+
+&emsp;&emsp;<sub>这就意味着JVM实现时如果某时用了类型推断校验，那么就不能再变回去了。它要么拒绝那些不用类型检查校验的`class`文件，要么就在类型检查失败时持续降级用类型推断校验。</sub>
+
+类型检查器会将Prolog语法声明的类型规则进行强制要求。其中用英语文本对类型规则做非正规描述，用Prolog语法做正规描述。
+
+类型检查器需要每个带`Code`属性（§4.7.3）的方法提供一个栈映射帧列表。这个列表是在`Code`属性的`StackMapTable`属性（§4.7.4）中的。这样做的目的就是栈映射帧必须出现在方法中每个基本块的开头。栈映射帧在每个基本块的开头就能声明每个操作数栈记录和每个局部变量的校验类型。类型检查器读取这些栈映射帧，使用这些映射就可以生成`Code`属性中指令类型安全的证明。
+
+如果类的方法都是类型安全的，那么这个类就是类型安全的，而且它不是一个`final`类的子类。
+
+```
+classIsTypeSafe(Class) :-
+    classClassName(Class, Name),
+    classDefiningLoader(Class, L),
+    superclassChain(Name, L, Chain),
+    Chain \= [],
+    classSuperClassName(Class, SuperclassName),
+    loadedClass(SuperclassName, L, Superclass),
+    classIsNotFinal(Superclass),
+    classMethods(Class, Methods),
+    checklist(methodIsTypeSafe(Class), Methods).
+classIsTypeSafe(Class) :-
+    classClassName(Class, 'java/lang/Object'),
+    classDefiningLoader(Class, L),
+    isBootstrapLoader(L),
+    classMethods(Class, Methods),
+    checklist(methodIsTypeSafe(Class), Methods).
+```
+
+Prolog预言`classIsTypeSafe`假设`Class`是一个Prolog词条，代表一个二进制类，已经被成功解析和加载。这份声明没有强调该词条的精确结构，但是要求基于它做出了某些预言（Predicate）。
