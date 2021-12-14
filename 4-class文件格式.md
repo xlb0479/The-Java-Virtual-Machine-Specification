@@ -3860,3 +3860,101 @@ Prolog预言`classIsTypeSafe`假设`Class`是一个Prolog词条，代表一个�
 
 `methodAttributes(Method, Attributes)`<br/>
 &emsp;&emsp;提取方法`Method`的属性的列表，`Attributes`。
+
+`isInit(Method)`<br/>
+&emsp;&emsp;当且仅当`Method`（不管类是啥）是`<init>`时为真。
+
+`isNotInit(Method)`<br/>
+&emsp;&emsp;当且仅当`Method`（不管类是啥）不是`<init>`时为真。
+
+`isNotFinal(Method, Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类中的`Method`不是`final`时为真。
+
+`isStatic(Method, Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类中的`Method`是`static`时为真。
+
+`isNotStatic(Method, Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类中的`Method`不是`static`时为真。
+
+`isPrivate(Method, Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类中的`Method`是`private`时为真。
+
+`isNotPrivate(Method, Class)`<br/>
+&emsp;&emsp;当且仅当`Class`类中的`Method`不是`private`时为真。
+
+`isProtected(MemberClass, MemberName, MemberDescriptor)`<br/>
+&emsp;&emsp;当且仅当`MemberClass`类中有一个成员名为`MemberName`且它的描述符为`MemberDescriptor`，并且它还是`protected`时为真。
+
+`isNotProtected(MemberClass, MemberName, MemberDescriptor)`<br/>
+&emsp;&emsp;当且仅当`MemberClass`类中有一个成员名为`MemberName`且它的描述符为`MemberDescriptor`，并且它不是`protected`时为真。
+
+`parseFieldDescriptor(Descriptor, Type)`<br/>
+&emsp;&emsp;将字段描述符`Descriptor`转换成对应的校验类型`Type`（§4.10.1.2）。
+
+`parseMethodDescriptor(Descriptor, ArgTypeList, ReturnType)`<br/>
+&emsp;&emsp;将方法描述符`Descriptor`转换成一个校验类型列表`ArgTypeList`，对应方法的参数类型，以及一个校验类型`ReturnType`，对应返回类型。
+
+`parseCodeAttribute(Class, Method, FrameSize, MaxStack, ParsedCode, Handlers, StackMap)`<br/>
+&emsp;&emsp;提取`Class`的`Method`方法中的指令流`ParsedCode`，以及操作数栈大小的最大值`MaxStack`，局部变量数量最大值`FrameSize`，异常处理器`Handlers`，以及栈映射`StackMap`。
+
+&emsp;&emsp;指令流和栈映射属性的表现形式必须跟§4.10.1.3和§4.10.1.4中说的一样。
+
+`samePackageName(Class1, Class2)`<br/>
+&emsp;&emsp;当且仅当`Class1`和`Class2`的包名一样时为真。
+
+`differentPackageName(Class1, Class2)`<br/>
+&emsp;&emsp;当且仅当`Class1`和`Class2`的包名不一样时为真。
+
+对方法体做类型检查的时候，很容易访问到与方法相关的信息。为了实现这种需求，我们定义了一个*环境变量*，一个六元组：
+
+- 一个类
+- 一个方法
+- 方法声明的返回类型
+- 方法中的指令
+- 操作数栈大小的最大值
+- 异常处理器列表
+
+我们定义了从环境变量提取信息的访问器。
+
+```
+allInstructions(Environment, Instructions) :-
+    Environment = environment(_Class, _Method, _ReturnType,
+                                Instructions, _, _).
+
+exceptionHandlers(Environment, Handlers) :-
+    Environment = environment(_Class, _Method, _ReturnType,
+                                _Instructions, _, Handlers).
+
+maxOperandStackLength(Environment, MaxStack) :-
+    Environment = environment(_Class, _Method, _ReturnType,
+                                _Instructions, MaxStack, _Handlers).
+
+thisClass(Environment, class(ClassName, L)) :-
+    Environment = environment(Class, _Method, _ReturnType,
+                                _Instructions, _, _),
+    classDefiningLoader(Class, L),
+    classClassName(Class, ClassName).
+
+thisMethodReturnType(Environment, ReturnType) :-
+    Environment = environment(_Class, _Method, ReturnType,
+                                _Instructions, _, _).
+```
+
+我们还定义了其他的预言，可以从环境变量中获取高阶信息。
+
+```
+offsetStackFrame(Environment, Offset, StackFrame) :-
+    allInstructions(Environment, Instructions),
+    member(stackMap(Offset, StackFrame), Instructions).
+currentClassLoader(Environment, Loader) :-
+    thisClass(Environment, class(_, Loader)).
+```
+
+最终，我们定义了一个一般预言贯穿类型规则：
+
+```
+notMember(_, []).
+notMember(X, [A | More]) :- X \= A, notMember(X, More).
+```
+
+&emsp;&emsp;<sub>如何规定哪些访问器应该被明确要求，哪些应该被完整定义，我们的根本宗旨是，不去过度要求`Class`文件的表达形式。为`Class`或`Method`词条（term）提供专用的访问器的话，就会强制我们去完整定义出用来表达`class`文件的Prolog词条的格式。</sub>
