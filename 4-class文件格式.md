@@ -3985,3 +3985,68 @@ notMember(X, [A | More]) :- X \= A, notMember(X, More).
                                          |
                                         null
 ```
+
+大部分校验类型跟表4.3-A中用字段描述符表达的基本类型和引用类型都有一个直接关联：
+
+- 基本类型`double`、`float`、`int`、`long`（字段描述符`D`、`F`、`I`、`J`）对应它们的同名校验类型。
+- 基本类型`byte`、`char`、`short`、`boolean`（字段描述符`B`、`C`、`S`、`Z`）都对应同样的校验类型`int`。
+- 类和接口类型（字段描述符以`L`开头）对应使用`class`函子的校验类型。校验类型`class(N, L)`代表的类的二进制名为*N*，被加载器*L*加载。这里`L`是`class(N, L)`所表达的类的初始化加载器（§5.3），那么它可以是也可以不是该类的定义加载器。
+
+&emsp;&emsp;<sub>比如`Object`这种类类型可以表达成`class('java/lang/Object', BL)`，其中`BL`是引导加载器。</sub>
+
+- 数组类型（字段描述符以`[`开头）对应的校验类型使用`arrayOf`函子。虽然基本类型`byte`、`char`、`short`、`boolean`没有单独对应的校验类型，但是元素类型为`byte`、`char`、`short`、`boolean`的数组类型*确有*单独对应的校验类型；这些校验类型支持*baload*、*bastore*、*caload*、*castore*、*saload*、*sastore*、*newarray*指令。
+    - 校验类型`arrayOf(T)`代表的数组类型，它的组成类型是校验类型*T*。
+    - 校验类型`arrayOf(byte)`代表的数组类型，它的元素类型是`byte`。
+    - 校验类型`arrayOf(char)`代表的数组类型，它的元素类型是`char`。
+    - 校验类型`arrayOf(short)`代表的数组类型，它的元素类型是`short`。
+    - 校验类型`arrayOf(boolean)`代表的数组类型，它的元素类型是`boolean`。
+
+&emsp;&emsp;&emsp;&emsp;<sub>比如数组类型`int[]`和`Object[]`可以通过校验类型`arrayOf(int)`和`arrayOf(class('java/lang/Object', BL))`来表达。数组类型`byte[]`和`boolean[][]`可以通过校验类型`arrayOf(byte)`和`arrayOf(arrayOf(boolean))`来表达。</sub>
+
+下面给出剩下的校验类型：
+
+- 校验类型`top`、`oneWord`、`twoWord`、`reference`通过Prolog原子表达，这些名字代表询问中的校验类型。（由于不懂Prolog，这里的询问原文是question，不知道是啥意思。）
+- 校验类型`uninitialized(Offset)`的表达方式是一个函子`uninitialized`加一个参数，这个参数代表`Offset`的数值。
+
+校验类型的子类型规则如下。
+
+子类型是自反的。
+
+```
+isAssignable(X, X).
+```
+
+如果校验类型不是Java语言中的引用类型，那么它们具有的子类型规则形式是：
+
+```
+isAssignable(v, X) :- isAssignable(the_direct_supertype_of_v, X).
+```
+
+意思是如果`v`的直接父类型是`X`的一个子类型，那么`v`是`X`的一个子类型。规则如下：
+
+```
+isAssignable(oneWord, top).
+isAssignable(twoWord, top).
+
+isAssignable(int, X) :- isAssignable(oneWord, X).
+isAssignable(float, X) :- isAssignable(oneWord, X).
+isAssignable(long, X) :- isAssignable(twoWord, X).
+isAssignable(double, X) :- isAssignable(twoWord, X).
+
+isAssignable(reference, X) :- isAssignable(oneWord, X).
+isAssignable(class(_, _), X) :- isAssignable(reference, X).
+isAssignable(arrayOf(_), X) :- isAssignable(reference, X).
+
+isAssignable(uninitialized, X) :- isAssignable(reference, X).
+isAssignable(uninitializedThis, X) :- isAssignable(uninitialized, X).
+isAssignable(uninitialized(_), X) :- isAssignable(uninitialized, X).
+
+isAssignable(null, class(_, _)).
+isAssignable(null, arrayOf(_)).
+isAssignable(null, X) :- isAssignable(class('java/lang/Object', BL), X),
+                        isBootstrapLoader(BL).
+```
+
+&emsp;&emsp;<sub>这些子类型规则并非得是子类型的最明显的公式。（完了，bbq了，这说的这是啥啊）对于Java语言中的引用类型的子类型规则，和其他校验类型之间存在着清晰的子类型规则划分。这种划分可以让我们在Java语言引用类型和其他校验类型之间声明一般性的子类型关系。这种关系独自持有Java引用类型在类型层级中的位置，有助于防止JVM实现对类进行过度加载。比如，为了`class(foo, L) <: twoWord`这种形式的查询，我们可不想顺着Java父类层级往上爬。（真的bbq了，一脸懵逼。）</sub>
+
+&emsp;&emsp;<sub></sub>
