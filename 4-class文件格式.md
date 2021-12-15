@@ -4049,4 +4049,47 @@ isAssignable(null, X) :- isAssignable(class('java/lang/Object', BL), X),
 
 &emsp;&emsp;<sub>这些子类型规则并非得是子类型的最明显的公式。（完了，bbq了，这说的这是啥啊）对于Java语言中的引用类型的子类型规则，和其他校验类型之间存在着清晰的子类型规则划分。这种划分可以让我们在Java语言引用类型和其他校验类型之间声明一般性的子类型关系。这种关系独自持有Java引用类型在类型层级中的位置，有助于防止JVM实现对类进行过度加载。比如，为了`class(foo, L) <: twoWord`这种形式的查询，我们可不想顺着Java父类层级往上爬。（真的bbq了，一脸懵逼。）</sub>
 
-&emsp;&emsp;<sub></sub>
+&emsp;&emsp;<sub>我们还有一条规则可以体现子类型是自反的，如此这般，这些规则就可以涵盖绝大部分的校验类型，不包括Java语言中的引用类型。</sub>
+
+对于Java语言中的引用类型的子类型规则，使用`isJavaAssignable`进行递归声明。
+
+```
+isAssignable(class(X, Lx), class(Y, Ly)) :-
+    isJavaAssignable(class(X, Lx), class(Y, Ly)).
+
+isAssignable(arrayOf(X), class(Y, L)) :-
+    isJavaAssignable(arrayOf(X), class(Y, L)).
+
+isAssignable(arrayOf(X), arrayOf(Y)) :-
+    isJavaAssignable(arrayOf(X), arrayOf(Y)).
+```
+
+赋值时，接口按`Object`用。
+
+```
+isJavaAssignable(class(_, _), class(To, L)) :-
+    loadedClass(To, L, ToClass),
+    classIsInterface(ToClass).
+
+isJavaAssignable(From, To) :-
+    isJavaSubclassOf(From, To).
+```
+
+数组类型是`Object`的子类型。同理，数组类型也是`Cloneable`和`java.io.Serializable`的子类型。
+
+```
+isJavaAssignable(arrayOf(_), class('java/lang/Object', BL)) :-
+    isBootstrapLoader(BL).
+
+isJavaAssignable(arrayOf(_), X) :-
+    isArrayInterface(X).
+
+isArrayInterface(class('java/lang/Cloneable', BL)) :-
+    isBootstrapLoader(BL).
+
+isArrayInterface(class('java/io/Serializable', BL)) :-
+    isBootstrapLoader(BL).
+```
+
+刚才看了一下Prolog相关的内容，还真是听说过没见过，一脸高大上。不懂不懂，有机会的话也想好好学一下。你凑合着看吧。
+
