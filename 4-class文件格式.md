@@ -4091,5 +4091,44 @@ isArrayInterface(class('java/io/Serializable', BL)) :-
     isBootstrapLoader(BL).
 ```
 
-刚才看了一下Prolog相关的内容，还真是听说过没见过，一脸高大上。不懂不懂，有机会的话也想好好学一下。你凑合着看吧。
+刚才看了一下Prolog相关的内容，还真是听说过没见过，一脸高大上。不懂不懂，有机会的话也想好好学一下。你凑合着看吧。再次化身无情的直译机器。
+
+在基本类型数组之间做子类化是身份关系。这特么也太直译了，我自己都看不懂了。
+
+```
+isJavaAssignable(arrayOf(X), arrayOf(Y)) :-
+    atom(X),
+    atom(Y),
+    X = Y.
+```
+
+在引用类型数组之间做子类化是协变式的。
+
+```
+isJavaAssignable(arrayOf(X), arrayOf(Y)) :-
+    compound(X), compound(Y), isJavaAssignable(X, Y).
+```
+
+子类化是自反的。
+
+```
+isJavaSubclassOf(class(SubclassName, L), class(SubclassName, L)).
+
+isJavaSubclassOf(class(SubclassName, LSub), class(SuperclassName, LSuper)) :-
+    superclassChain(SubclassName, LSub, Chain),
+    member(class(SuperclassName, L), Chain),
+    loadedClass(SuperclassName, L, Sup),
+    loadedClass(SuperclassName, LSuper, Sup).
+
+superclassChain(ClassName, L, [class(SuperclassName, Ls) | Rest]) :-
+    loadedClass(ClassName, L, Class),
+    classSuperClassName(Class, SuperclassName),
+    classDefiningLoader(Class, Ls),
+    superclassChain(SuperclassName, Ls, Rest).
+
+superclassChain('java/lang/Object', L, []) :-
+    loadedClass('java/lang/Object', L, Class),
+    classDefiningLoader(Class, BL),
+    isBootstrapLoader(BL).
+```
 
