@@ -4209,3 +4209,94 @@ instruction(Offset, AnInstruction)
 - `dconstant(ConstantName, FieldDescriptor)`代表常量池记录是一个`CONSTANT_Dynamic_info`结构体（§4.4.10）。
 
 &emsp;&emsp;`ConstantName`和`FieldDescriptor`对应结构体的`name_and_type_index`属性引用的名字和字段描述符。（`bootstrap_method_attr_index`属性与校验无关。）
+
+#### 4.10.1.4 栈映射帧与类型变换
+
+栈映射帧在Prolog也是用词条列表的形式：
+
+```
+stackMap(Offset, TypeState)
+```
+
+其中：
+
+- `Offset`是个整数，代表该栈映射帧在字节码中的偏移量（§4.7.4）。
+
+&emsp;&emsp;该列表中字节码偏移量的顺序必须跟`class`文件中的一样。
+
+- `TypeState`是`Offset`处的指令所期待的类型状态。
+
+*类型状态*是方法中操作数栈和局部变量的位置到校验类型的映射。格式如下：
+
+```
+frame(Locals, OperandStack, Flags)
+```
+
+其中：
+
+- `Locals`是一个校验类型列表，列表中第*i*个元素（索引从0开始）代表局部变量*i*的类型。
+
+&emsp;&emsp;长度为2的类型（`long`和`double`）用两个局部变量来表达（§2.6.1），第一个局部变量是类型本身，第二个局部变量则是`top`（§4.10.1.7）。
+
+- `OperandStack`是一个校验类型列表，第一个元素代表操作数栈顶的类型，然后就是按着操作数栈自顶向下的顺序挨着往后排。
+
+&emsp;&emsp;长度为2的类型（`long`和`double`）需要用两条栈记录来表达，第一条是`top`，第二条是类型本身。
+
+&emsp;&emsp;&emsp;&emsp;<sub>比如吧，栈中有一个`double`值，一个`int`值，还有一个`long`值，表达成对应的类型状态需要五条记录：`double`值需要一个`top`和一个`double`记录，`int`值需要一个`int`记录，`long`值需要一个`top`和一个`long`记录。最终，`OperandStack`就是`[top, double, int, top, long]`这样一个列表。</sub>
+
+- `Flags`也是一个列表，它要么是空的，要么只有一个元素`flagThisUninit`。
+
+&emsp;&emsp;如果`Locals`中存在类型为`uninitializedThis`类型的局部变量，那么`Flags`中就只有一个`flagThisUninit`元素，要么`Flags`就是空的。
+
+&emsp;&emsp;&emsp;&emsp;<sub>`flagThisUninit`在构造器中用来表示`this`的初始化还没有完成。此时，从方法中返回是非法的。</sub>
+
+校验类型的子类化是一点儿一点儿扩展到类型状态的。方法的局部变量数组在构造后长度就固定了（见§4.10.1.6的`methodInitialStackFrame`），但是操作数栈是会变大变小的，所以我们需要明确的检查操作数栈的长度，确定它的可赋值情况是否满足子类化的需要。
+
+```
+frameIsAssignable(frame(Locals1, StackMap1, Flags1),
+                frame(Locals2, StackMap2, Flags2)) :-
+    length(StackMap1, StackMapLength),
+    length(StackMap2, StackMapLength),
+    maplist(isAssignable, Locals1, Locals2),
+    maplist(isAssignable, StackMap1, StackMap2),
+    subset(Flags1, Flags2).
+```
+
+大部分单条指令的类型规则（§4.10.1.9）都要依赖一个有效的*类型变换*。一个类型变换如何才算*有效的*呢，如果它能从输入的类型状态的操作数栈上弹出一个期望的类型列表，并将它们替换成期望的结果类型，得到一个新的类型状态，而且操作数栈的长度还不会超过它声明的最大长度，这样的类型变换就是有效的。
+
+```
+validTypeTransition(Environment, ExpectedTypesOnStack, ResultType,
+                    frame(Locals, InputOperandStack, Flags),
+                    frame(Locals, NextOperandStack, Flags)) :-
+    popMatchingList(InputOperandStack, ExpectedTypesOnStack,
+                    InterimOperandStack),
+    pushOperandStack(InterimOperandStack, ResultType, NextOperandStack),
+    operandStackHasLegalLength(Environment, NextOperandStack).
+```
+
+从栈上团出一个类型列表。
+
+```
+popMatchingList(OperandStack, [], OperandStack).
+popMatchingList(OperandStack, [P | Rest], NewOperandStack) :-
+    popMatchingType(OperandStack, P, TempOperandStack, _ActualType),
+    popMatchingList(TempOperandStack, Rest, NewOperandStack).
+```
+
+从栈中弹出单条类型。具体的动作依赖于栈的内容。如果栈的逻辑栈顶是指定类型`Type`的某个子类型，那就弹出来。如果一个类型占了两条栈记录，那么逻辑栈顶就是栈顶下面的真实类型，而栈的栈顶则是无用的`top`类型。
+
+```
+popMatchingType([ActualType | OperandStack],
+                Type, OperandStack, ActualType) :-
+    sizeOf(Type, 1),
+    isAssignable(ActualType, Type).
+
+popMatchingType([top, ActualType | OperandStack],
+                Type, OperandStack, ActualType) :-
+    sizeOf(Type, 2),
+    isAssignable(ActualType, Type).
+    
+sizeOf(X, 2) :- isAssignable(X, twoWord).
+sizeOf(X, 1) :- isAssignable(X, oneWord).
+sizeOf(top, 1).
+```
