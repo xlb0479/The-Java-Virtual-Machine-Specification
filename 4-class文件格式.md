@@ -4132,3 +4132,80 @@ superclassChain('java/lang/Object', L, []) :-
     isBootstrapLoader(BL).
 ```
 
+#### 4.10.1.3 指令形式
+
+单条字节码指令表达成Prolog中的词条，函子是指令的名字，参数是解析后的操作数。
+
+&emsp;&emsp;<sub>比如一个*aload*指令表达成词条`aload(N)`，包含的索引`N`就是指令的操作数。</sub>
+
+指令的整体就表达成一个词条的列表形式：
+
+```
+instruction(Offset, AnInstruction)
+```
+
+&emsp;&emsp;<sub>比如，`instruction(21, aload(1)).`。</sub>
+
+列表中指令的顺序必须跟`class`文件中的一样。
+
+有些指令的操作数引用了`constant_pool`表中的记录，代表字段、方法、或动态计算的调用点。这种记录要表达成以下形式的函子应用：
+
+- `field(FieldClassName, FieldName, FieldDescriptor)`代表常量池记录是一个`CONSTANT_Fieldref_info`结构体（§4.4.2）。
+
+&emsp;&emsp;`FieldClassName`是结构体中`class_index`引用的类的名字。`FieldName`和`FieldDescriptor`对应的是结构体中`name_and_type_index`引用的名字和字段描述符。
+
+- `method(MethodClassName, MethodName, MethodDescriptor)`代表常量池记录时一个`CONSTANT_Methodref_info`结构体（§4.4.2）。
+
+&emsp;&emsp;`MethodClassName`是结构体中`class_index`引用的类的名字。`MethodName`和`MethodDescriptor`对应结构体中`name_and_type_index`引用的名字和方法描述符。
+
+- `imethod(MethodIntfName, MethodName, MethodDescriptor)`代表常量池记录是一个`CONSTANT_InterfaceMethodref_info`结构体（§4.4.2）。
+
+&emsp;&emsp;`MethodIntfName`是结构体中`class_index`引用的接口的名字。`MethodName`和`MethodDescriptor`对应结构体中`name_and_type_index`引用的名字和方法描述符。
+
+- `dmethod(CallSiteName, MethodDescriptor)`代表常量池记录是一个`CONSTANT_InvokeDynamic_info`结构体（§4.4.10）。
+
+&emsp;&emsp;`CallSiteName`和`MethodDescriptor`对应结构体中`name_and_type_index`引用的名字和方法描述符。（`bootstrap_method_attr_index`属性与校验无关。）
+
+为了看的清楚一些，我们把字段和方法描述符（§4.3.2，§4.3.3）的名字改的好懂一点：去掉类名中开头的`L`和结尾的`;`，基本类型中用的*BaseType*字符改成对应类型的名字。
+
+&emsp;&emsp;<sub>比如一个*getfield*指令，操作数引用了一个常量池中的记录，记录代表一个字段`foo`，类型为`F`，所在的类是`Bar`，那就表达成`getfield(field('Bar', 'foo', 'F'))`。</sub>
+
+*ldc*指令的一个操作数引用了`constant_pool`表中的一个*可加载*记录。一共有九种可加载记录（见表4.4-C），用函子应用表达成以下形式：
+
+- `int(Value)`代表常量池记录是一个`CONSTANT_Integer_info`结构体（§4.4.4）。
+
+&emsp;&emsp;`Value`是结构体中`bytes`属性代表的`int`常量。
+
+&emsp;&emsp;&emsp;&emsp;<sub>比如一个加载`int`常量值91的*ldc*指令就要表达成`ldc(int(91))`。</sub>
+
+- `float(Value)`代表常量池记录是一个`CONSTANT_Float_info`结构体（§4.4.4）。
+
+&emsp;&emsp;`Value`是结构体的`bytes`属性代表的`float`常量。
+
+- `long(Value)`代表常量池记录是一个`CONSTANT_Long_info`结构体（§4.4.5）。
+
+&emsp;&emsp;`Value`是结构体的`high_bytes`和`low_bytes`属性代表的`long`常量。
+
+- `double(Value)`代表常量池记录是一个`CONSTANT_Double_info`结构体（§4.4.5）。
+
+&emsp;&emsp;`Value`是结构体的`high_bytes`和`low_bytes`属性代表的`double`常量。
+
+- `class(ClassName)`代表常量池记录是一个`CONSTANT_Class_info`结构体（§4.4.1）。
+
+&emsp;&emsp;`ClassName`是结构体的`name_index`属性引用的类或接口的名字。
+
+- `string(Value)`代表常量池记录是一个`CONSTANT_String_info`结构体（§4.4.3）。
+
+&emsp;&emsp;`Value`是结构体的`string_index`属性引用的字符串。
+
+- `methodHandle(Kind, Reference)`代表常量池记录是一个`CONSTANT_MethodHandle_info`结构体（§4.4.8）。
+
+&emsp;&emsp;`Kind`是结构体的`reference_kind`属性的值。`Reference`是结构体的`reference_index`属性的值。
+
+- `methodType(MethodDescriptor)`代表常量池记录是一个`CONSTANT_MethodType_info`结构体（§4.4.9）。
+
+&emsp;&emsp;`MethodDescriptor`是结构体的`descriptor_index`属性引用的方法描述符。
+
+- `dconstant(ConstantName, FieldDescriptor)`代表常量池记录是一个`CONSTANT_Dynamic_info`结构体（§4.4.10）。
+
+&emsp;&emsp;`ConstantName`和`FieldDescriptor`对应结构体的`name_and_type_index`属性引用的名字和字段描述符。（`bootstrap_method_attr_index`属性与校验无关。）
