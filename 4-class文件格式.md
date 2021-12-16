@@ -4300,3 +4300,72 @@ sizeOf(X, 2) :- isAssignable(X, twoWord).
 sizeOf(X, 1) :- isAssignable(X, oneWord).
 sizeOf(top, 1).
 ```
+
+逻辑类型压栈。具体的动作依赖于该类型的大小。如果类型长度为1，那就直接压栈。如果类型长度为2，先把它压栈，再压一个`top`。
+
+```
+pushOperandStack(OperandStack, 'void', OperandStack).
+pushOperandStack(OperandStack, Type, [Type | OperandStack]) :-
+    sizeOf(Type, 1).
+pushOperandStack(OperandStack, Type, [top, Type | OperandStack]) :-
+    sizeOf(Type, 2).
+```
+
+操作数栈的长度不能超过声明的最大值。
+
+```
+operandStackHasLegalLength(Environment, OperandStack) :-
+    length(OperandStack, Length),
+    maxOperandStackLength(Environment, MaxStack),
+    Length =< MaxStack.
+```
+
+*dup*指令从输入类型状态的操作数栈上弹出期望的类型，并将其替换成预定义的结果类型，最终得到一个新的类型状态。但是这些指令再类型变换中没有定义，因为没必要用关系的子类化去匹配类型。*dup*指令是按照栈中类型的*分类*，将操作数栈作为一个整体来操作的（§2.11.1）。
+
+分类1中的类型占用一条栈记录。如果栈顶是`Type`，而且`Type`不是`top`（否则它可能表示的是一个分类2类型的上半部分），那么就可以从栈中弹出一个分类1的逻辑类型`Type`。最终就是输入栈的栈顶记录被弹出。
+
+```
+popCategory1([Type | Rest], Type, Rest) :-
+    Type \= top,
+    sizeOf(Type, 1).
+```
+
+分类2中的类型占用两条栈记录。如果栈顶是`top`，而且下面一条紧挨着的记录是`Type`，那么就可以从栈中弹出一个分类2的逻辑类型`Type`。结果就是输入栈的栈顶的两条记录被弹出。
+
+```
+popCategory2([top, Type | Rest], Type, Rest) :-
+    sizeOf(Type, 2).
+```
+
+*dup*指令将类型列表压栈本质上和一次有效的类型变化将一个类型压栈的方式是一样的。
+
+```
+canSafelyPush(Environment, InputOperandStack, Type, OutputOperandStack) :-
+    pushOperandStack(InputOperandStack, Type, OutputOperandStack),
+    operandStackHasLegalLength(Environment, OutputOperandStack).
+
+canSafelyPushList(Environment, InputOperandStack, Types,
+                OutputOperandStack) :-
+    canPushList(InputOperandStack, Types, OutputOperandStack),
+    operandStackHasLegalLength(Environment, OutputOperandStack).
+
+canPushList(InputOperandStack, [], InputOperandStack).
+canPushList(InputOperandStack, [Type | Rest], OutputOperandStack) :-
+    pushOperandStack(InputOperandStack, Type, InterimOperandStack),
+    canPushList(InterimOperandStack, Rest, OutputOperandStack).
+```
+
+单条指令的很多类型规则使用下面这种语法，可以很容易的从栈中弹出一个类型列表。
+
+```
+canPop(frame(Locals, OperandStack, Flags), Types,
+        frame(Locals, PoppedOperandStack, Flags)) :-
+    popMatchingList(OperandStack, Types, PoppedOperandStack).
+```
+
+最后，某些数组指令（*§aaload*，*§arraylength*，*§baload*，*§bastore*）它先要看一下操作数栈顶的类型，确认它们是数组类型。下面的语法用来从类型状态访问操作数栈的第*i*个元素。
+
+```
+nth1OperandStackIs(i, frame(_Locals, OperandStack, _Flags), Element) :-
+    nth1(i, OperandStack, Element).
+```
