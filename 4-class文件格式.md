@@ -4373,3 +4373,96 @@ nth1OperandStackIs(i, frame(_Locals, OperandStack, _Flags), Element) :-
 #### 4.10.1.5 抽象与本地方法的类型检查
 
 如果没有重写一个`final`方法，那么`abstract`方法和`native`方法都被认为是类型安全的。
+
+```
+methodIsTypeSafe(Class, Method) :-
+    doesNotOverrideFinalMethod(Class, Method),
+    methodAccessFlags(Method, AccessFlags),
+    member(abstract, AccessFlags).
+
+methodIsTypeSafe(Class, Method) :-
+    doesNotOverrideFinalMethod(Class, Method),
+    methodAccessFlags(Method, AccessFlags),
+    member(native, AccessFlags).
+```
+
+`private`方法和`static`方法跟动态方法分派是正交的，所以它们永远不会覆盖其他方法（§5.4.5）。
+
+```
+doesNotOverrideFinalMethod(class('java/lang/Object', L), Method) :-
+    isBootstrapLoader(L).
+
+doesNotOverrideFinalMethod(Class, Method) :-
+    isPrivate(Method, Class).
+
+doesNotOverrideFinalMethod(Class, Method) :-
+    isStatic(Method, Class).
+
+doesNotOverrideFinalMethod(Class, Method) :-
+    isNotPrivate(Method, Class),
+    isNotStatic(Method, Class),
+    doesNotOverrideFinalMethodOfSuperclass(Class, Method).
+
+doesNotOverrideFinalMethodOfSuperclass(Class, Method) :-
+    classSuperClassName(Class, SuperclassName),
+    classDefiningLoader(Class, L),
+    loadedClass(SuperclassName, L, Superclass),
+    classMethods(Superclass, SuperMethodList),
+    finalMethodNotOverridden(Method, Superclass, SuperMethodList).
+```
+
+`private`或`static`的`final`方法并不常见，因为`private`和`static`方法本身并不能被重写。因此，如果发现了一个`final private`或`final static`方法，逻辑上它们不会被其它方法覆盖。
+
+```
+finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
+    methodName(Method, Name),
+    methodDescriptor(Method, Descriptor),
+    member(method(_, Name, Descriptor), SuperMethodList),
+    isFinal(Method, Superclass),
+    isPrivate(Method, Superclass).
+
+finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
+    methodName(Method, Name),
+    methodDescriptor(Method, Descriptor),
+    member(method(_, Name, Descriptor), SuperMethodList),
+    isFinal(Method, Superclass),
+    isStatic(Method, Superclass).
+```
+
+如果发现了一个非`final`的`private`或非`final`的`static`方法，那么就跳过它，因为它跟重写也是正交的。
+
+```
+finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
+    methodName(Method, Name),
+    methodDescriptor(Method, Descriptor),
+    member(method(_, Name, Descriptor), SuperMethodList),
+    isNotFinal(Method, Superclass),
+    isPrivate(Method, Superclass),
+    doesNotOverrideFinalMethodOfSuperclass(Superclass, Method).
+
+finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
+    methodName(Method, Name),
+    methodDescriptor(Method, Descriptor),
+    member(method(_, Name, Descriptor), SuperMethodList),
+    isNotFinal(Method, Superclass),
+    isStatic(Method, Superclass),
+    doesNotOverrideFinalMethodOfSuperclass(Superclass, Method).
+```
+
+如果发现了一个非`final`、非`private`、非`static`的方法，那么肯定不会覆盖一个`final`方法。否则向上递归。
+
+```
+finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
+    methodName(Method, Name),
+    methodDescriptor(Method, Descriptor),
+    member(method(_, Name, Descriptor), SuperMethodList),
+    isNotFinal(Method, Superclass),
+    isNotStatic(Method, Superclass),
+    isNotPrivate(Method, Superclass).
+
+finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
+    methodName(Method, Name),
+    methodDescriptor(Method, Descriptor),
+    notMember(method(_, Name, Descriptor), SuperMethodList),
+    doesNotOverrideFinalMethodOfSuperclass(Superclass, Method).
+```
