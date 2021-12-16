@@ -4369,3 +4369,7 @@ canPop(frame(Locals, OperandStack, Flags), Types,
 nth1OperandStackIs(i, frame(_Locals, OperandStack, _Flags), Element) :-
     nth1(i, OperandStack, Element).
 ```
+
+#### 4.10.1.5 抽象与本地方法的类型检查
+
+如果没有重写一个`final`方法，那么`abstract`方法和`native`方法都被认为是类型安全的。
