@@ -4626,4 +4626,153 @@ methodInitialStackFrame(Class, Method, FrameSize, frame(Locals, [], Flags),
     expandToLength(ThisArgs, FrameSize, top, Locals).
 ```
 
-已知一个类型列表，下面的语法会产生一个新列表，其中每个长度为2的类型都被替换成了两条记录：一个对应它本身，另一个是`top`记录。
+已知一个类型列表，下面的语法会产生一个新列表，其中每个长度为2的类型都被替换成了两条记录：一个对应它本身，另一个是`top`记录。得到的结果对应该列表在32位字长JVM中的表达形式。
+
+```
+expandTypeList([], []).
+expandTypeList([Item | List], [Item | Result]) :-
+    sizeOf(Item, 1),
+    expandTypeList(List, Result).
+expandTypeList([Item | List], [Item, top | Result]) :-
+    sizeOf(Item, 2),
+    expandTypeList(List, Result).
+
+flags([uninitializedThis], [flagThisUninit]).
+flags(X, []) :- X \= [uninitializedThis].
+
+expandToLength(List, Size, _Filler, List) :-
+    length(List, Size).
+
+expandToLength(List, Size, Filler, Result) :-
+    length(List, ListLength),
+    ListLength < Size,
+    Delta is Size - ListLength,
+    length(Extra, Delta),
+    checklist(=(Filler), Extra),
+    append(List, Extra, Result).
+```
+
+对于一个实例方法的初始类型状态，我们计算`this`的类型并放入列表中。在`Object`的`<init>`方法中`this`的类型是`Object`；在其它场合的`<init>`方法中，`this`是`unitializedThis`；除此之外，在实例方法中的`this`的类型是`class(N, L)`，其中`N`是包含该方法的类的名字，`L`是它的定义类加载器。
+
+对于静态方法的初始状态类型，`this`没啥关系，列表为空。
+
+```
+methodInitialThisType(_Class, Method, []) :-
+    methodAccessFlags(Method, AccessFlags),
+    member(static, AccessFlags),
+    methodName(Method, MethodName),
+    MethodName \= '<init>'.
+
+methodInitialThisType(Class, Method, [This]) :-
+    methodAccessFlags(Method, AccessFlags),
+    notMember(static, AccessFlags),
+    instanceMethodInitialThisType(Class, Method, This).
+
+instanceMethodInitialThisType(Class, Method, class('java/lang/Object', L)) :-
+    methodName(Method, '<init>'),
+    classDefiningLoader(Class, L),
+    isBootstrapLoader(L),
+    classClassName(Class, 'java/lang/Object').
+
+instanceMethodInitialThisType(Class, Method, uninitializedThis) :-
+    methodName(Method, '<init>'),
+    classClassName(Class, ClassName),
+    classDefiningLoader(Class, CurrentLoader),
+    superclassChain(ClassName, CurrentLoader, Chain),
+    Chain \= [].
+
+instanceMethodInitialThisType(Class, Method, class(ClassName, L)) :-
+    methodName(Method, MethodName),
+    MethodName \= '<init>',
+    classDefiningLoader(Class, L),
+    classClassName(Class, ClassName).
+```
+
+我们现在要计算一下方法中合并后的流是否类型正确，要用到方法的初始类型状态：
+
+- 如果我们有一个栈映射帧和一个输入类型状态，这个类型状态必须可以赋值给栈映射帧中的类型。然后我们就可以对流中剩余的部分做类型检查了，检查栈映射帧中的类型状态。
+
+```
+mergedCodeIsTypeSafe(Environment, [stackMap(Offset, MapFrame) | MoreCode],
+                    frame(Locals, OperandStack, Flags)) :-
+    frameIsAssignable(frame(Locals, OperandStack, Flags), MapFrame),
+    mergedCodeIsTypeSafe(Environment, MoreCode, MapFrame).
+```
+
+- 合并的代码流相对于输入类型状态`T`是类型安全的，如果`T`的开头的指令`I`相对于`T`是类型安全的，而且`T`*满足*了它的异常处理器（下面会说），而且流的末尾是类型安全的，顺着`I`的执行给出其类型状态。（哎。。。我已经陷入蒙圈了。）
+
+&emsp;&emsp;`NextStackFrame`代表传给后续指令的内容。对于一个无条件分支指令，它是一个特殊值`afterGoto`。`ExceptionStackFrame`代表传给异常处理器的内容。
+
+```
+mergedCodeIsTypeSafe(Environment, [instruction(Offset, Parse) | MoreCode],
+                    frame(Locals, OperandStack, Flags)) :-
+    instructionIsTypeSafe(Parse, Environment, Offset,
+                        frame(Locals, OperandStack, Flags),
+                        NextStackFrame, ExceptionStackFrame),
+    instructionSatisfiesHandlers(Environment, Offset, ExceptionStackFrame),
+    mergedCodeIsTypeSafe(Environment, MoreCode, NextStackFrame).
+```
+
+- 在一个无条件分叉过后（说明来了一个`afterGoto`的类型状态），如果我们有能给出后续指令状态类型的栈映射帧，那我们就可以继续用栈映射帧提供的类型状态进行类型检查。
+
+```
+mergedCodeIsTypeSafe(Environment, [stackMap(Offset, MapFrame) | MoreCode],
+                    afterGoto) :-
+    mergedCodeIsTypeSafe(Environment, MoreCode, MapFrame).
+```
+
+- 如果一个无条件分叉过后的代码没有对应的栈映射帧，那么就是非法的。
+
+```
+mergedCodeIsTypeSafe(_Environment, [instruction(_, _) | _MoreCode],
+                    afterGoto) :-
+    write_ln('No stack frame after unconditional branch'),
+    fail.
+```
+
+- 如果在代码结尾处出现一个无条件分叉，那么就结束这个惨淡的翻译吧。
+
+```
+mergedCodeIsTypeSafe(_Environment, [endOfCode(Offset)],
+                    afterGoto).
+```
+
+如果目标有关联的栈帧`Frame`，并且当前栈帧`StackFrame`可以赋值给`Frame`，此时分叉到目标才是类型安全的。
+
+```
+targetIsTypeSafe(Environment, StackFrame, Target) :-
+    offsetStackFrame(Environment, Target, Frame),
+    frameIsAssignable(StackFrame, Frame).
+```
+
+如果一个指令满足了所有适用于该指令的异常处理器，那么这个指令才算是*满足它的异常处理器*。
+
+```
+instructionSatisfiesHandlers(Environment, Offset, ExceptionStackFrame) :-
+    exceptionHandlers(Environment, Handlers),
+    sublist(isApplicableHandler(Offset), Handlers, ApplicableHandlers),
+    checklist(instructionSatisfiesHandler(Environment, ExceptionStackFrame),
+            ApplicableHandlers).
+```
+
+如果指令的偏移量大于等于异常处理器受理范围的起始，且小于受理范围的截止，那么这个异常处理器就*适用于*这个指令。
+
+```
+isApplicableHandler(Offset, handler(Start, End, _Target, _ClassName)) :-
+    Offset >= Start,
+    Offset < End.
+```
+
+如果指令的输出类型状态是`ExcStackFrame`，并且处理器的目标（处理器代码的起始指令）是类型安全的，假设是一个输入的类型状态`T`，那么该指令就*满足*了类型处理器。类型状态`T`派生自`ExcStackFrame`，把它的操作数栈换成了一个仅有处理器异常类的栈。
+
+```
+instructionSatisfiesHandler(Environment, ExcStackFrame, Handler) :-
+    Handler = handler(_, _, Target, _),
+    currentClassLoader(Environment, CurrentLoader),
+    handlerExceptionClass(Handler, ExceptionClass, CurrentLoader),
+    /* The stack consists of just the exception. */
+    ExcStackFrame = frame(Locals, _, Flags),
+    TrueExcStackFrame = frame(Locals, [ ExceptionClass ], Flags),
+    operandStackHasLegalLength(Environment, TrueExcStackFrame),
+    targetIsTypeSafe(Environment, TrueExcStackFrame, Target).
+```
