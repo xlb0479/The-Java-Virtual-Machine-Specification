@@ -4776,3 +4776,78 @@ instructionSatisfiesHandler(Environment, ExcStackFrame, Handler) :-
     operandStackHasLegalLength(Environment, TrueExcStackFrame),
     targetIsTypeSafe(Environment, TrueExcStackFrame, Target).
 ```
+
+#### 4.10.1.7 加载与存储指令的类型检查
+
+所有的加载指令都是一种通用模式的变体，根据指令加载的值的类型来变化。
+
+如果局部变量的类型是`ActualType`，`ActualType`可以赋值给`Type`，并且将`ActualType`压入输入的操作数栈是一次有效的类型变换（§4.10.1.4），并且生成了一个新的类型状态`NextStackFrame`，那么从局部变量`Index`加载一个`Type`类型的值就是类型安全的。加载指令执行后，状态类型就变成了`NextStackStream`。
+
+```
+loadIsTypeSafe(Environment, Index, Type, StackFrame, NextStackFrame) :-
+    StackFrame = frame(Locals, _OperandStack, _Flags),
+    nth0(Index, Locals, ActualType),
+    isAssignable(ActualType, Type),
+    validTypeTransition(Environment, [], ActualType, StackFrame,
+                        NextStackFrame).
+```
+
+所有存储指令都是一种通用模式的变体，根据指令存储的值的类型来变化。
+
+一般来说，如果指令引用的局部变量的类型是`Type`的超类，并且操作数栈顶的类型是`Type`的子类，这样的存储指令就是类型安全的，这个`Type`就是该指令预期要存储的类型。
+
+更准确点说的话，如果存储指令是类型安全的，那么它得能从操作数栈弹出一个“匹配”`Type`（也就是`Type`的子类型）的`ActualType`类型（§4.10.1.4），然后合法的为这个类型赋予局部变量<code>L<sub>Index</sub></code>。
+
+```
+storeIsTypeSafe(_Environment, Index, Type,
+                frame(Locals, OperandStack, Flags),
+                frame(NextLocals, NextOperandStack, Flags)) :-
+    popMatchingType(OperandStack, Type, NextOperandStack, ActualType),
+    modifyLocalVariable(Index, ActualType, Locals, NextLocals).
+```
+
+已知局部变量`Locals`，把`Index`的类型改成`Type`，结果放到局部变量列表`NewLocals`中。这种修改有嫩么点儿复杂，因为有的值（以及它们对应的类型）占俩局部变量。因此修改<code>L<sub>N</sub></code>可能需要修改<code>L<sub>N+1</sub></code>（引用类型要占`N`和`N+1`）或<code>L<sub>N-1</sub></code>（因为局部`N`可能是从局部`N-1`开始的双字值/类型的上半部分），或者俩都得改。下面我们细说。我们从<code>L<sub>0</sub></code>开始。
+
+```
+modifyLocalVariable(Index, Type, Locals, NewLocals) :-
+    modifyLocalVariable(0, Index, Type, Locals, NewLocals).
+```
+
+已知`LocalsRest`，它是局部变量列表的后缀部分，从索引`I`处开始，修改局部变量`Index`，类型改成`Type`，得到局部变量列表后缀`NextLocalsRest`。
+
+如果`I < Index-1`，那么直接把输入复制到输出，然后向前递归。如果`I = Index-1`，局部`I`的类型可能发生变化。这种情况当<code>L<sub>I</sub></code>的类型占2个长度的时候就会发生。当我们给<code>L<sub>I+1</sub></code>设置新的类型后（以及对应的值），<code>L<sub>I</sub></code>的值/类型就失效了，因为它的上半部分会被丢弃掉。然后我们向前递归。（哎。。。。。）
+
+```
+modifyLocalVariable(I, Index, Type,
+                    [Locals1 | LocalsRest],
+                    [Locals1 | NextLocalsRest] ) :-
+    I < Index - 1,
+    I1 is I + 1,
+    modifyLocalVariable(I1, Index, Type, LocalsRest, NextLocalsRest).
+
+modifyLocalVariable(I, Index, Type,
+                    [Locals1 | LocalsRest],
+                    [NextLocals1 | NextLocalsRest] ) :-
+    I =:= Index - 1,
+    modifyPreIndexVariable(Locals1, NextLocals1),
+    modifyLocalVariable(Index, Index, Type, LocalsRest, NextLocalsRest).
+```
+
+当我们拿到的变量只占用一个字的时候，我们把它改成`Type`就完事儿了。如果占用两个字，那我们就把它的类型改成`Type`然后第二个字改成`top`。
+
+```
+modifyLocalVariable(Index, Index, Type,
+                    [_ | LocalsRest], [Type | LocalsRest]) :-
+    sizeOf(Type, 1).
+
+modifyLocalVariable(Index, Index, Type,
+                    [_, _ | LocalsRest], [Type, top | LocalsRest]) :-
+    sizeOf(Type, 2).
+```
+
+我们引用一个局部变量，紧跟着它的索引的下一个局部变量的类型会被修改成一个*预索引变量*。一个类型为`InputType`的预索引变量未来的类型是`Result`。如果预索引局部变量的类型`Type`长度为1，那么它就不变。如果预索引局部变量的类型`Type`的长度为2，那我们要将这两个字的下半部分标记成无用的，把它的类型设置为`top`。
+
+```
+modifyPreIndexVariable(Type, Type) :- sizeOf(Type, 1).
+modifyPreIndexVariable(Type, top) :- sizeOf(Type, 2).
+```
