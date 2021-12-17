@@ -4466,3 +4466,164 @@ finalMethodNotOverridden(Method, Superclass, SuperMethodList) :-
     notMember(method(_, Name, Descriptor), SuperMethodList),
     doesNotOverrideFinalMethodOfSuperclass(Superclass, Method).
 ```
+
+#### 4.10.1.6 方法代码的类型检查
+
+非`abstract`、非`native`方法，如果它们由代码并且代码是类型正确的，那么它们就是类型正确的。
+
+```
+methodIsTypeSafe(Class, Method) :-
+    doesNotOverrideFinalMethod(Class, Method),
+    methodAccessFlags(Method, AccessFlags),
+    methodAttributes(Method, Attributes),
+    notMember(native, AccessFlags),
+    notMember(abstract, AccessFlags),
+    member(attribute('Code', _), Attributes),
+    methodWithCodeIsTypeSafe(Class, Method).
+```
+
+如果方法的代码和栈映射帧能够合并成一个流，这样每个栈映射帧后面紧跟着它对应的指令，并且合并后的流是类型正确的，此时，这种有代码的方法就是类型正确的。如果方法有异常处理器，必须也得是合法的才行。
+
+```
+methodWithCodeIsTypeSafe(Class, Method) :-
+    parseCodeAttribute(Class, Method, FrameSize, MaxStack,
+                    ParsedCode, Handlers, StackMap),
+    mergeStackMapAndCode(StackMap, ParsedCode, MergedCode),
+    methodInitialStackFrame(Class, Method, FrameSize, StackFrame, ReturnType),
+    Environment = environment(Class, Method, ReturnType, MergedCode,
+                            MaxStack, Handlers),
+    handlersAreLegal(Environment),
+    mergedCodeIsTypeSafe(Environment, MergedCode, StackFrame).
+```
+
+我们先看下异常处理器。
+
+异常处理器的表达形式是一个函子应用：
+
+```
+handler(Start, End, Target, ClassName)
+```
+
+参数分别是该处理器所覆盖指令范围的起止位置，处理器代码的第一条指令，以及该处理器要处理的异常类的名字。
+
+一个异常处理器什么时候才叫*合法的*呢，它的起始（`Start`）必须小于截止（`End`），`Start`指定的偏移量上必须要有一条指令，`End`指定的偏移量上也必须要有一条指令，处理器的异常类可以赋值给`Throwable`类，满足这些条件才可以。如果处理器的类记录是0，那么它的异常类就是`Throwable`，否则就是处理器中的类名。
+
+如果`<init>`方法中的处理器覆盖的指令中有一条是一个`<init>`方法的*invokespecial*指令，此时就会有一条额外的要求。在这种场景中，如果该处理器被触发，说明当前正在被构造的对象出现了问题，因此该处理器不应该遏制该异常然后让外层`<init>`方法正常返回给调用者。该处理器此时要么是中断完成，将异常抛给外层`<init>`方法的调用者，要么是陷入无穷无尽的深渊，自己蹲墙角默默的死循环。
+
+```
+handlersAreLegal(Environment) :-
+    exceptionHandlers(Environment, Handlers),
+    checklist(handlerIsLegal(Environment), Handlers).
+
+handlerIsLegal(Environment, Handler) :-
+    Handler = handler(Start, End, Target, _),
+    Start < End,
+    allInstructions(Environment, Instructions),
+    member(instruction(Start, _), Instructions),
+    offsetStackFrame(Environment, Target, _),
+    instructionsIncludeEnd(Instructions, End),
+    currentClassLoader(Environment, CurrentLoader),
+    handlerExceptionClass(Handler, ExceptionClass, CurrentLoader),
+    isBootstrapLoader(BL),
+    isAssignable(ExceptionClass, class('java/lang/Throwable', BL)),
+    initHandlerIsLegal(Environment, Handler).
+
+instructionsIncludeEnd(Instructions, End) :-
+    member(instruction(End, _), Instructions).
+instructionsIncludeEnd(Instructions, End) :-
+    member(endOfCode(End), Instructions).
+
+handlerExceptionClass(handler(_, _, _, 0),
+                    class('java/lang/Throwable', BL), _) :-
+    isBootstrapLoader(BL).
+
+handlerExceptionClass(handler(_, _, _, Name),
+                    class(Name, L), L) :-
+    Name \= 0.
+
+initHandlerIsLegal(Environment, Handler) :-
+    notInitHandler(Environment, Handler).
+
+notInitHandler(Environment, Handler) :-
+    Environment = environment(_Class, Method, _, Instructions, _, _),
+    isNotInit(Method).
+
+notInitHandler(Environment, Handler) :-
+    Environment = environment(_Class, Method, _, Instructions, _, _),
+    isInit(Method),
+    member(instruction(_, invokespecial(CP)), Instructions),
+    CP = method(MethodClassName, MethodName, Descriptor),
+    MethodName \= '<init>'.
+
+initHandlerIsLegal(Environment, Handler) :-
+    isInitHandler(Environment, Handler),
+    sublist(isApplicableInstruction(Target), Instructions,
+            HandlerInstructions),
+    noAttemptToReturnNormally(HandlerInstructions).
+
+isInitHandler(Environment, Handler) :-
+    Environment = environment(_Class, Method, _, Instructions, _, _),
+    isInit(Method).
+    member(instruction(_, invokespecial(CP)), Instructions),
+    CP = method(MethodClassName, '<init>', Descriptor).
+
+isApplicableInstruction(HandlerStart, instruction(Offset, _)) :-
+    Offset >= HandlerStart.
+
+noAttemptToReturnNormally(Instructions) :-
+    notMember(instruction(_, return), Instructions).
+
+noAttemptToReturnNormally(Instructions) :-
+    member(instruction(_, athrow), Instructions).
+```
+
+现在让我们来看一下指令和栈映射帧的流。
+
+将指令和栈映射帧合并到一个流中涉及到四种场景：
+
+- 合并一个空的`StackMap`和一个提取原始指令列表的指令列表。
+
+```
+mergeStackMapAndCode([], CodeList, CodeList).
+```
+
+- 已知一个栈映射帧列表，开头是`Offset`处指令的类型状态，以及一个从`Offset`处开始的指令列表，合并后的列表是栈映射帧列表的开头，加上指令列表的开头，加上两个列表末尾合并后的结果。
+
+```
+mergeStackMapAndCode([stackMap(Offset, Map) | RestMap],
+                    [instruction(Offset, Parse) | RestCode],
+                    [stackMap(Offset, Map),
+                        instruction(Offset, Parse) | RestMerge]) :-
+    mergeStackMapAndCode(RestMap, RestCode, RestMerge).
+```
+
+- 否则，已知一个栈映射帧列表，开头是`OffsetM`处指令的类型状态，以及一个从`OffsetP`处开始的指令列表，然后，如果`OffsetP < OffsetM`，合并后的结果就是指令列表的开头加上栈映射帧列表跟指令列表末尾合并后的结果。
+
+```
+mergeStackMapAndCode([stackMap(OffsetM, Map) | RestMap],
+                    [instruction(OffsetP, Parse) | RestCode],
+                    [instruction(OffsetP, Parse) | RestMerge]) :-
+    OffsetP < OffsetM,
+    mergeStackMapAndCode([stackMap(OffsetM, Map) | RestMap],
+                        RestCode, RestMerge).
+```
+
+- 否则，两个列表的合并是未定义的。因为指令列表的偏移量是单调递增的，两个列表的合并便是未定义的，除非每个栈映射帧偏移量都有一个对应的指令偏移量，并且栈映射帧也是按照单调递增的顺序。
+
+要判断方法中合并的流是否是类型正确的，我们首先要推断方法的初始类型状态。
+
+方法的初始类型状态包括一个空的操作数栈，以及从`this`类型继承过来的局部变量类型，以及参数，当然还有合适的标记，具体要依赖于这是不是一个`<init>`方法。
+
+```
+methodInitialStackFrame(Class, Method, FrameSize, frame(Locals, [], Flags),
+                        ReturnType):-
+    methodDescriptor(Method, Descriptor),
+    parseMethodDescriptor(Descriptor, RawArgs, ReturnType),
+    expandTypeList(RawArgs, Args),
+    methodInitialThisType(Class, Method, ThisList),
+    flags(ThisList, Flags),
+    append(ThisList, Args, ThisArgs),
+    expandToLength(ThisArgs, FrameSize, top, Locals).
+```
+
+已知一个类型列表，下面的语法会产生一个新列表，其中每个长度为2的类型都被替换成了两条记录：一个对应它本身，另一个是`top`记录。
