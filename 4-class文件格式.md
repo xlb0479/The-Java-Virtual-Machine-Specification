@@ -4851,3 +4851,117 @@ modifyLocalVariable(Index, Index, Type,
 modifyPreIndexVariable(Type, Type) :- sizeOf(Type, 1).
 modifyPreIndexVariable(Type, top) :- sizeOf(Type, 2).
 ```
+
+#### 4.10.1.8 protected成员的类型检查
+
+所有访问成员的指令必须要考虑`protected`成员的情况。本节就来讲一下符合JLS §6.6.2.1的`protected`成员检查。
+
+`protected`检查只应用于当前类的超类中的`protected`成员。其他类中的`protected`成员访问检查会在解析的时候完成（§5.4.4）。一共有四种情况：
+
+- 如果一个类的名字不属于任何超类的名字，它不是超类，那么可以安全的忽略掉。
+
+```
+passesProtectedCheck(Environment, MemberClassName, MemberName,
+                    MemberDescriptor, StackFrame) :-
+    thisClass(Environment, class(CurrentClassName, CurrentLoader)),
+    superclassChain(CurrentClassName, CurrentLoader, Chain),
+    notMember(class(MemberClassName, _), Chain).
+```
+
+- 如果某个超类的名字是`MemberClassName`，当前处理的类就的确可能是一个超类。此时，如果在另一个不同的运行时包中，不存在名为`MemberClassName`的超类，并且有一个名为`MemberName`且描述符为`MemberDescriptor`的`protected`成员，那么就不会进行`protected`检查。
+
+&emsp;&emsp;<sub>这是因为真正要被解析的类是这些超类中的其中一个，此时我们知道它要么在同样的运行时包中，此时访问是合法的；要么就是要处理的成员不是`protected`的，也就不用检查；要么它可能是一个子类，此时的检查怎么着都会成功；要么它是同一个运行时包中的某个其它的类，此时的访问也是合法的，不需要检查；要么校验器没有标明出这种问题，因为怎么着也会捕获它，因为解析过程一定是奔着失败去的。</sub>
+
+```
+passesProtectedCheck(Environment, MemberClassName, MemberName,
+                    MemberDescriptor, StackFrame) :-
+    thisClass(Environment, class(CurrentClassName, CurrentLoader)),
+    superclassChain(CurrentClassName, CurrentLoader, Chain),
+    member(class(MemberClassName, _), Chain),
+    classesInOtherPkgWithProtectedMember(
+        class(CurrentClassName, CurrentLoader),
+        MemberName, MemberDescriptor, MemberClassName, Chain, []).
+```
+
+- 如果在其它运行时包中不存在`protected`的超类成员，那么就加载`MemberClassName`；如果要处理的成员不是`protected`的，那么就不用检查。（使用超类中非`protected`成员那是相当正确的行为。）
+
+```
+passesProtectedCheck(Environment, MemberClassName, MemberName,
+                    MemberDescriptor,
+                    frame(_Locals, [Target | Rest], _Flags)) :-
+    thisClass(Environment, class(CurrentClassName, CurrentLoader)),
+    superclassChain(CurrentClassName, CurrentLoader, Chain),
+    member(class(MemberClassName, _), Chain),
+    classesInOtherPkgWithProtectedMember(
+        class(CurrentClassName, CurrentLoader),
+        MemberName, MemberDescriptor, MemberClassName, Chain, List),
+    List \= [],
+    loadedClass(MemberClassName, CurrentLoader, ReferencedClass),
+    isNotProtected(ReferencedClass, MemberName, MemberDescriptor).
+```
+
+- 否则，使用`Target`类型的对象的成员需要`Target`能够被复制给当前类的类型。
+
+```
+passesProtectedCheck(Environment, MemberClassName, MemberName,
+                    MemberDescriptor,
+                    frame(_Locals, [Target | Rest], _Flags)) :-
+    thisClass(Environment, class(CurrentClassName, CurrentLoader)),
+    superclassChain(CurrentClassName, CurrentLoader, Chain),
+    member(class(MemberClassName, _), Chain),
+    classesInOtherPkgWithProtectedMember(
+        class(CurrentClassName, CurrentLoader),
+        MemberName, MemberDescriptor, MemberClassName, Chain, List),
+    List \= [],
+    loadedClass(MemberClassName, CurrentLoader, ReferencedClass),
+    isProtected(ReferencedClass, MemberName, MemberDescriptor),
+    isAssignable(Target, class(CurrentClassName, CurrentLoader)).
+```
+
+如果预言`classesInOtherPkgWithProtectedMember(Class, MemberName, MemberDescriptor, MemberClassName, Chain, List)`为真，那么`List`就是`Chain`中类的集合，其名为`MemberClassName`，跟`Class`不在同样的运行时包中，后者有一个`protected`成员，名为`MemberName`，描述符为`MemberDescriptor`。
+
+```
+classesInOtherPkgWithProtectedMember(_, _, _, _, [], []).
+
+classesInOtherPkgWithProtectedMember(Class, MemberName,
+    MemberDescriptor, MemberClassName,
+    [class(MemberClassName, L) | Tail],
+    [class(MemberClassName, L) | T]) :-
+
+    differentRuntimePackage(Class, class(MemberClassName, L)),
+    loadedClass(MemberClassName, L, Super),
+    isProtected(Super, MemberName, MemberDescriptor),
+    classesInOtherPkgWithProtectedMember(
+        Class, MemberName, MemberDescriptor, MemberClassName, Tail, T).
+
+classesInOtherPkgWithProtectedMember(Class, MemberName,
+                                    MemberDescriptor, MemberClassName,
+                                    [class(MemberClassName, L) | Tail],
+                                    T) :-
+    differentRuntimePackage(Class, class(MemberClassName, L)),
+    loadedClass(MemberClassName, L, Super),
+    isNotProtected(Super, MemberName, MemberDescriptor),
+    classesInOtherPkgWithProtectedMember(
+        Class, MemberName, MemberDescriptor, MemberClassName, Tail, T).
+
+classesInOtherPkgWithProtectedMember(Class, MemberName,
+                                    MemberDescriptor, MemberClassName,
+                                    [class(MemberClassName, L) | Tail],
+                                    T] :-
+    sameRuntimePackage(Class, class(MemberClassName, L)),
+    classesInOtherPkgWithProtectedMember(
+        Class, MemberName, MemberDescriptor, MemberClassName, Tail, T).
+
+sameRuntimePackage(Class1, Class2) :-
+    classDefiningLoader(Class1, L),
+    classDefiningLoader(Class2, L),
+    samePackageName(Class1, Class2).
+
+differentRuntimePackage(Class1, Class2) :-
+    classDefiningLoader(Class1, L1),
+    classDefiningLoader(Class2, L2),
+    L1 \= L2.
+
+differentRuntimePackage(Class1, Class2) :-
+    differentPackageName(Class1, Class2).
+```
