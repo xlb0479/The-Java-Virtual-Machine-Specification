@@ -4965,3 +4965,41 @@ differentRuntimePackage(Class1, Class2) :-
 differentRuntimePackage(Class1, Class2) :-
     differentPackageName(Class1, Class2).
 ```
+
+#### 4.10.1.9 指令类型检查
+
+一般来说，指令的类型规则是相对于指令所在的用来定义类和方法的环境`Environment`来讲的（§4.10.1.1），以及方法中指令发生的偏移量`Offset`。规则声明了如果输入类型状态`StackFrame`满足了特定条件，那么：
+
+- 指令是类型安全的。
+- 可以证明指令正常结束后出现的类型状态的格式由`NextStackFrame`决定，指令被中断后的类型状态由`ExceptionStackFrame`决定。
+
+&emsp;&emsp;指令中断后的类型状态和输入的类型状态一样，除非操作数栈是空的。
+
+```
+exceptionStackFrame(StackFrame, ExceptionStackFrame) :-
+    StackFrame = frame(Locals, _OperandStack, Flags),
+    ExceptionStackFrame = frame(Locals, [], Flags).
+```
+
+很多指令的类型规则都跟其他指令的规则完全同构。如果一个指令`b1`跟另一个指令`b2`同构，那么`b1`的类型规则和`b2`的类型规则一样。
+
+```
+instructionIsTypeSafe(Instruction, Environment, Offset, StackFrame,
+                    NextStackFrame, ExceptionStackFrame) :-
+    instructionHasEquivalentTypeRule(Instruction, IsomorphicInstruction),
+    instructionIsTypeSafe(IsomorphicInstruction, Environment, Offset,
+                        StackFrame, NextStackFrame,
+                        ExceptionStackFrame).
+```
+
+每条规则的英文描述应当言简意赅，并且用词精准。因此，就不重复上面说过的上下文相关的设定了。特别时：
+
+- 描述中没有明确提到环境。
+- 后面的描述中如果提到操作数栈或局部变量，那么它指的是类型状态中的操作数栈或局部变量：要么是输入的类型状态，要么是输出的。
+- 指令中断后的类型状态几乎总是跟输入的类型状态一样。描述中只讨论不一样的情况。
+- 描述中提到对操作数栈的出栈和压栈，并不会明确讨论栈的上下溢出的问题。描述中假设操作可以正常完成，但是Prolog的操作数栈相关的语法会保证对操作进行所有必要的检查。
+- 描述中只会讨论逻辑类型的操作。在实际情况中有的类型可能要使用不止一个字。描述的内容会将这些表现形式的细节抽象出来，但是Prolog语法中可不会这么干。
+
+如果有歧义的话都可以参考正式的Prolog语法来处理。
+
+好了，这一节剩下的内容我就不翻译了，因为都是很工具化的内容，每个指令逐条讲解，需要的过来自查就好了。
